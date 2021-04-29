@@ -1,0 +1,3 @@
+build*
+samples/OpenCV-player/build*
+lib.cvtoolkit/lib
