@@ -4,3 +4,6 @@ project( samples )
 # Connect samples
 add_subdirectory( OpenCV-player )
 add_dependencies( opencv-player cvtoolkit )
+
+add_subdirectory( Mask-RCNN )
+add_dependencies( mask-rcnn cvtoolkit )

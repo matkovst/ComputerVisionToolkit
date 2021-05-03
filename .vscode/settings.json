@@ -1,4 +1,5 @@
 {
+    "cmake.outputLogEncoding": "win1251",
     "files.associations": {
         "algorithm": "cpp",
         "array": "cpp",
@@ -50,6 +51,14 @@
         "xstddef": "cpp",
         "xstring": "cpp",
         "xtr1common": "cpp",
-        "xutility": "cpp"
+        "xutility": "cpp",
+        "map": "cpp",
+        "xtree": "cpp",
+        "set": "cpp",
+        "ctime": "cpp",
+        "fstream": "cpp",
+        "iomanip": "cpp",
+        "xlocmon": "cpp",
+        "xloctime": "cpp"
     }
 }
