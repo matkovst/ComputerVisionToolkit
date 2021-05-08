@@ -2,21 +2,24 @@
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
+#if CV_MAJOR_VERSION == 3
+#include <opencv2/optflow.hpp>
+#else
+#include <opencv2/video/tracking.hpp>
+#endif
 
 #include <cvtoolkit/cvplayer.hpp>
 #include <cvtoolkit/cvgui.hpp>
-#include <cvtoolkit/nndetector.hpp>
 #include <cvtoolkit/utils.hpp>
 
 
-const static std::string WinName = "Mask-RCNN";
+const static std::string WinName = "OpenCV Player";
 
 const cv::String argKeys =
         "{ help usage ?   |        | print help }"
         "{ @input i       |  0     | input stream }"
         "{ resize r       |  1.0   | resize scale factor }"
         "{ record e       |  false | do record }"
-        "{ @data d        |        | model data }"
         ;
 
 
@@ -35,7 +38,6 @@ int main(int argc, char** argv)
     double scaleFactor = parser.get<double>("resize");
     bool doResize = (scaleFactor != 1.0);
     bool record = parser.get<bool>("record");
-    std::string data = parser.get<std::string>("@data");
     
     if (!parser.check())
     {
@@ -53,20 +55,15 @@ int main(int argc, char** argv)
     std::cout << ">>> Resolution: " << player->frame0().size() << std::endl;
     std::cout << ">>> Record: " << std::boolalpha << record << std::endl;
 
-    /* Main stuff */
-    std::string textGraph = data + "/mask_rcnn_inception_v2_coco_2018_01_28.pbtxt";
-    std::string modelWeights = data + "/mask_rcnn_inception_v2_coco_2018_01_28/frozen_inference_graph.pb";
-    std::string cocoNames = data + "/coco.names";
-    int backend = cv::dnn::DNN_BACKEND_DEFAULT;
-    int target = cv::dnn::DNN_TARGET_CPU;
-#if HAVE_OPENCV_CUDA && CV_MAJOR_VERSION > 3 && CV_MINOR_VERSION > 1
-    backend = cv::dnn::DNN_BACKEND_CUDA;
-    target = cv::dnn::DNN_TARGET_CUDA;
+    /* Init DIS */
+#if CV_MAJOR_VERSION == 3
+    cv::Ptr<cv::optflow::DISOpticalFlow> disOpt;
+    disOpt = cv::optflow::createOptFlow_DIS(cv::optflow::DISOpticalFlow::PRESET_ULTRAFAST);
+#else
+    cv::Ptr<cv::DISOpticalFlow> disOpt;
+    disOpt = cv::DISOpticalFlow::create(0);
 #endif
-    cvt::MaskRCNNObjectDetector detector(textGraph, modelWeights, cocoNames, backend, target);
-
-    cvt::ObjectClasses vehicleClasses { {2, "car"}, {3, "motorcycle"}, {5, "bus"}, {7, "truck"} };
-    cvt::ObjectClasses personClasses { {0, "person"} };
+    cv::Mat gray, prevGray;
 
     /* Main loop */
     bool loop = true;
@@ -88,17 +85,24 @@ int main(int argc, char** argv)
             break;
         }
 
+        /* Pre-process */
+        cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
+        if ( prevGray.empty() )
+        {
+            prevGray = gray.clone();
+        }
+
         /* Computer vision magic */
-        cvt::InferOuts dOuts;
-        detector.Infer( frame, dOuts, 0.25f, vehicleClasses );
+        cv::Mat_<cv::Point2f> optFlow;
+        disOpt->calc(gray, prevGray, optFlow);
         
-        // cvt::InferOuts fdOuts;
-        // fdOuts.reserve(dOuts.size());
-        // detector.Filter( dOuts, fdOuts, vehicleClasses );
+        /* Post-processing */
+        cv::swap(gray, prevGray);
+
     
-        /* Display info & Record */
+        /* Display info */
         out = frame.clone();
-        cvt::drawInferOuts( out, dOuts, cv::Scalar::all(0) );
+        cvt::drawMotionField(optFlow, out, 16);
 
         if ( record )
         {

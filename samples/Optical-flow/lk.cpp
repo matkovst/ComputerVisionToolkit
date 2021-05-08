@@ -2,21 +2,19 @@
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
+#include <opencv2/video/tracking.hpp>
 
 #include <cvtoolkit/cvplayer.hpp>
 #include <cvtoolkit/cvgui.hpp>
-#include <cvtoolkit/nndetector.hpp>
-#include <cvtoolkit/utils.hpp>
 
 
-const static std::string WinName = "Mask-RCNN";
+const static std::string WinName = "LK Optical flow";
 
 const cv::String argKeys =
         "{ help usage ?   |        | print help }"
         "{ @input i       |  0     | input stream }"
         "{ resize r       |  1.0   | resize scale factor }"
         "{ record e       |  false | do record }"
-        "{ @data d        |        | model data }"
         ;
 
 
@@ -35,7 +33,6 @@ int main(int argc, char** argv)
     double scaleFactor = parser.get<double>("resize");
     bool doResize = (scaleFactor != 1.0);
     bool record = parser.get<bool>("record");
-    std::string data = parser.get<std::string>("@data");
     
     if (!parser.check())
     {
@@ -53,24 +50,28 @@ int main(int argc, char** argv)
     std::cout << ">>> Resolution: " << player->frame0().size() << std::endl;
     std::cout << ">>> Record: " << std::boolalpha << record << std::endl;
 
-    /* Main stuff */
-    std::string textGraph = data + "/mask_rcnn_inception_v2_coco_2018_01_28.pbtxt";
-    std::string modelWeights = data + "/mask_rcnn_inception_v2_coco_2018_01_28/frozen_inference_graph.pb";
-    std::string cocoNames = data + "/coco.names";
-    int backend = cv::dnn::DNN_BACKEND_DEFAULT;
-    int target = cv::dnn::DNN_TARGET_CPU;
-#if HAVE_OPENCV_CUDA && CV_MAJOR_VERSION > 3 && CV_MINOR_VERSION > 1
-    backend = cv::dnn::DNN_BACKEND_CUDA;
-    target = cv::dnn::DNN_TARGET_CUDA;
-#endif
-    cvt::MaskRCNNObjectDetector detector(textGraph, modelWeights, cocoNames, backend, target);
+    // Create some random colors
+    std::vector<cv::Scalar> colors;
+    cv::RNG rng;
+    for ( int i = 0; i < 100; ++i )
+    {
+        int r = rng.uniform(0, 256);
+        int g = rng.uniform(0, 256);
+        int b = rng.uniform(0, 256);
+        colors.push_back(cv::Scalar(r, g, b));
+    }
 
-    cvt::ObjectClasses vehicleClasses { {2, "car"}, {3, "motorcycle"}, {5, "bus"}, {7, "truck"} };
-    cvt::ObjectClasses personClasses { {0, "person"} };
+    // Take first frame and find corners in it
+    cv::Mat prevGray;
+    std::vector<cv::Point2f> p0, p1;
+    cv::cvtColor(player->frame0(), prevGray, cv::COLOR_BGR2GRAY);
+    cv::goodFeaturesToTrack(prevGray, p0, 100, 0.3, 7, cv::Mat(), 7, false, 0.04);
+    // Create a mask image for drawing purposes
+    cv::Mat mask = cv::Mat::zeros(player->frame0().size(), player->frame0().type());
 
     /* Main loop */
     bool loop = true;
-    cv::Mat frame, out;
+    cv::Mat frame, gray, out;
     while ( loop )
     {
         /* Controls */
@@ -88,17 +89,35 @@ int main(int argc, char** argv)
             break;
         }
 
+        /* Pre-process */
+        cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
+
         /* Computer vision magic */
-        cvt::InferOuts dOuts;
-        detector.Infer( frame, dOuts, 0.25f, vehicleClasses );
-        
-        // cvt::InferOuts fdOuts;
-        // fdOuts.reserve(dOuts.size());
-        // detector.Filter( dOuts, fdOuts, vehicleClasses );
+        // calculate optical flow
+        std::vector<uchar> status;
+        std::vector<float> err;
+        cv::TermCriteria criteria = cv::TermCriteria((cv::TermCriteria::COUNT) + (cv::TermCriteria::EPS), 10, 0.03);
+        cv::calcOpticalFlowPyrLK(prevGray, gray, p0, p1, status, err, cv::Size(15, 15), 2, criteria);
+
+        std::vector<cv::Point2f> good_new;
+        for ( uint i = 0; i < p0.size(); ++i )
+        {
+            // Select good points
+            if( status[i] == 1 ) 
+            {
+                good_new.push_back(p1[i]);
+                // draw the tracks
+                cv::line(mask, p1[i], p0[i], colors[i], 2);
+                cv::circle(frame, p1[i], 5, colors[i], -1);
+            }
+        }
+
+        // Now update the previous frame and previous points
+        cv::swap( gray, prevGray );
+        p0 = good_new;
     
-        /* Display info & Record */
-        out = frame.clone();
-        cvt::drawInferOuts( out, dOuts, cv::Scalar::all(0) );
+        /* Display info */
+        cv::add(frame, mask, out);
 
         if ( record )
         {

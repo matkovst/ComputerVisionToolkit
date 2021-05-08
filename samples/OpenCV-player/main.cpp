@@ -60,6 +60,14 @@ int main(int argc, char** argv)
     cv::Mat frame, out;
     while ( loop )
     {
+        /* Controls */
+        int action = gui.listenKeyboard();
+        if ( action == gui.CONTINUE ) continue;
+        if ( action == gui.CLOSE ) 
+        {
+            loop = false;
+        }
+
         /* Capturing */
         *player >> frame;
         if ( frame.empty() ) 
@@ -82,14 +90,6 @@ int main(int argc, char** argv)
             cv::cvtColor(out, out, cv::COLOR_GRAY2BGR);
         }
         gui.imshow(out, record);
-
-        /* Controls */
-        int action = gui.listenKeyboard();
-        if ( action == gui.CONTINUE ) continue;
-        if ( action == gui.CLOSE ) 
-        {
-            loop = false;
-        }
     }
     
     std::cout << ">>> Program successfully finished" << std::endl;

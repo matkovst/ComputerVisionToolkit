@@ -5,6 +5,64 @@
 namespace cvt
 {
 
+bool vectorOk(cv::Point2f u) 
+{
+    return (!cvIsNaN(u.x) && fabs(u.x) < 1e9) && (!cvIsNaN(u.y) && fabs(u.y) < 1e9);
+}
+
+void drawMotionField(const cv::Mat_<cv::Point2f>& optflow, cv::Mat& out, int stride)
+{
+    if ( out.empty() )
+    {
+        out = cv::Mat::zeros(optflow.size(), CV_8UC3);
+    }
+
+    for ( int y = 0; y < optflow.rows; y += stride ) 
+    {
+        for ( int x = 0; x < optflow.cols; x += stride ) 
+        {
+            cv::Point2f uu = -optflow(y, x);
+            if ( !vectorOk(uu) )
+            {
+                continue;
+            }
+            
+            cv::Point2i p1(x, y);
+            cv::Point2i p2(x + int(uu.x), y + int(uu.y));
+
+            cv::Vec2f vv = cv::Vec2f(uu.x, uu.y);
+            double mag = cv::norm(vv);
+            unsigned int H = 255 - static_cast<int>(255 - mag) * 280/ 255;    
+            unsigned int hi = (H/60) % 6;
+            float S=1.f;
+            float V=1.f ;
+            float f = H/60.f - H/60;
+            float p = V * (1 - S);
+            float q = V * (1 - f * S);
+            float t = V * (1 - (1 - f) * S);
+            cv::Point3f res;
+            if( hi == 0 ) //R = V,  G = t,  B = p
+                res = cv::Point3f( p, t, V );
+            if( hi == 1 ) // R = q, G = V,  B = p
+                res = cv::Point3f( p, V, q );
+            if( hi == 2 ) // R = p, G = V,  B = t
+                res = cv::Point3f( t, V, p );
+            if( hi == 3 ) // R = p, G = q,  B = V
+                res = cv::Point3f( V, q, p );
+            if( hi == 4 ) // R = t, G = p,  B = V
+                res = cv::Point3f( V, p, t );
+            if( hi == 5 ) // R = V, G = p,  B = q
+                res = cv::Point3f( q, p, V );
+            int b = int(std::max(0.f, std::min (res.x, 1.f)) * 255.f);
+            int g = int(std::max(0.f, std::min (res.y, 1.f)) * 255.f);
+            int r = int(std::max(0.f, std::min (res.z, 1.f)) * 255.f);
+            cv::Scalar color(b, g, r);
+
+            cv::arrowedLine(out, p1, p2, color, 1);
+        }
+    }
+}
+
 void drawInferOut( cv::Mat& frame, const InferOut& inferOut, cv::Scalar color, bool drawObjectMask, bool drawLabel )
 {
     const int thickness = 2;

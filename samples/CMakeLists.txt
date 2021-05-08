@@ -7,3 +7,5 @@ add_dependencies( opencv-player cvtoolkit )
 
 add_subdirectory( Mask-RCNN )
 add_dependencies( mask-rcnn cvtoolkit )
+
+add_subdirectory( Optical-flow )

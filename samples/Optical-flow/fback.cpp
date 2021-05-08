@@ -2,21 +2,19 @@
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
+#include <opencv2/video/tracking.hpp>
 
 #include <cvtoolkit/cvplayer.hpp>
 #include <cvtoolkit/cvgui.hpp>
-#include <cvtoolkit/nndetector.hpp>
-#include <cvtoolkit/utils.hpp>
 
 
-const static std::string WinName = "Mask-RCNN";
+const static std::string WinName = "OpenCV Player";
 
 const cv::String argKeys =
         "{ help usage ?   |        | print help }"
         "{ @input i       |  0     | input stream }"
         "{ resize r       |  1.0   | resize scale factor }"
         "{ record e       |  false | do record }"
-        "{ @data d        |        | model data }"
         ;
 
 
@@ -35,7 +33,6 @@ int main(int argc, char** argv)
     double scaleFactor = parser.get<double>("resize");
     bool doResize = (scaleFactor != 1.0);
     bool record = parser.get<bool>("record");
-    std::string data = parser.get<std::string>("@data");
     
     if (!parser.check())
     {
@@ -53,24 +50,13 @@ int main(int argc, char** argv)
     std::cout << ">>> Resolution: " << player->frame0().size() << std::endl;
     std::cout << ">>> Record: " << std::boolalpha << record << std::endl;
 
-    /* Main stuff */
-    std::string textGraph = data + "/mask_rcnn_inception_v2_coco_2018_01_28.pbtxt";
-    std::string modelWeights = data + "/mask_rcnn_inception_v2_coco_2018_01_28/frozen_inference_graph.pb";
-    std::string cocoNames = data + "/coco.names";
-    int backend = cv::dnn::DNN_BACKEND_DEFAULT;
-    int target = cv::dnn::DNN_TARGET_CPU;
-#if HAVE_OPENCV_CUDA && CV_MAJOR_VERSION > 3 && CV_MINOR_VERSION > 1
-    backend = cv::dnn::DNN_BACKEND_CUDA;
-    target = cv::dnn::DNN_TARGET_CUDA;
-#endif
-    cvt::MaskRCNNObjectDetector detector(textGraph, modelWeights, cocoNames, backend, target);
-
-    cvt::ObjectClasses vehicleClasses { {2, "car"}, {3, "motorcycle"}, {5, "bus"}, {7, "truck"} };
-    cvt::ObjectClasses personClasses { {0, "person"} };
+    /* Init optical flow */
+    cv::Mat prevGray;
+    cv::cvtColor(player->frame0(), prevGray, cv::COLOR_BGR2GRAY);
 
     /* Main loop */
     bool loop = true;
-    cv::Mat frame, out;
+    cv::Mat frame, gray, out;
     while ( loop )
     {
         /* Controls */
@@ -88,18 +74,34 @@ int main(int argc, char** argv)
             break;
         }
 
-        /* Computer vision magic */
-        cvt::InferOuts dOuts;
-        detector.Infer( frame, dOuts, 0.25f, vehicleClasses );
-        
-        // cvt::InferOuts fdOuts;
-        // fdOuts.reserve(dOuts.size());
-        // detector.Filter( dOuts, fdOuts, vehicleClasses );
-    
-        /* Display info & Record */
-        out = frame.clone();
-        cvt::drawInferOuts( out, dOuts, cv::Scalar::all(0) );
+        /* Pre-process */
+        cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
 
+        /* Computer vision magic */
+        cv::Mat flow(prevGray.size(), CV_32FC2);
+        cv::calcOpticalFlowFarneback(prevGray, gray, flow, 0.5, 3, 15, 3, 5, 1.2, 0);
+
+        // visualization
+        cv::Mat flow_parts[2];
+        cv::split(flow, flow_parts);
+        cv::Mat magnitude, angle, magn_norm;
+        cv::cartToPolar(flow_parts[0], flow_parts[1], magnitude, angle, true);
+        cv::normalize(magnitude, magn_norm, 0.0f, 1.0f, cv::NORM_MINMAX);
+        angle *= ((1.f / 360.f) * (180.f / 255.f));
+
+        //build hsv image
+        cv::Mat _hsv[3], hsv, hsv8;
+        _hsv[0] = angle;
+        _hsv[1] = cv::Mat::ones(angle.size(), CV_32F);
+        _hsv[2] = magn_norm;
+        cv::merge(_hsv, 3, hsv);
+        hsv.convertTo(hsv8, CV_8U, 255.0);
+        cv::cvtColor(hsv8, out, cv::COLOR_HSV2BGR);
+
+        cv::swap(gray, prevGray);
+
+    
+        /* Display info */
         if ( record )
         {
             *player << out;
