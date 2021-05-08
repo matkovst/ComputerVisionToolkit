@@ -13,8 +13,14 @@ The whole project can be built with CMake
 
 ```bash
 export OpenCV_DIR=path/to/opencv
-cd build && mkdir build
+mkdir build && cd build
 cmake ..
 make
 make install
+```
+
+## Run
+```bash
+cd bin
+./opencv-player -?
 ```
