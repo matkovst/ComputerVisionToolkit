@@ -13,7 +13,7 @@
 #include <cvtoolkit/utils.hpp>
 
 
-const static std::string WinName = "OpenCV Player";
+const static std::string WinName = "DIS Optical Flow";
 
 const cv::String argKeys =
         "{ help usage ?   |        | print help }"

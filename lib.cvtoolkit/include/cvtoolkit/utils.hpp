@@ -19,4 +19,8 @@ void drawInferOut( cv::Mat& frame, const InferOut& inferOut, cv::Scalar color = 
 
 void drawInferOuts( cv::Mat& frame, const InferOuts& inferOuts, cv::Scalar color = cv::Scalar(0, 0, 255), bool drawObjectMask = true, bool drawLabels = true );
 
+void hstack2images(const cv::Mat& l, const cv::Mat& r, cv::Mat& out);
+
+void stack4images(const cv::Mat& lt, const cv::Mat& rt, const cv::Mat& lb, const cv::Mat& rb, cv::Mat& out);
+
 }

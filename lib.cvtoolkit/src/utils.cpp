@@ -123,4 +123,48 @@ void drawInferOuts( cv::Mat& frame, const InferOuts& inferOuts, cv::Scalar color
     }
 }
 
+void hstack2images( const cv::Mat& l, const cv::Mat& r, cv::Mat& out )
+{
+    CV_Assert( l.size() == r.size() );
+    CV_Assert( l.type() == CV_8UC3 && r.type() == CV_8UC3 );
+
+    const int width = l.cols;
+    const int height = l.rows;
+
+    out = cv::Mat::zeros(height, 2 * width, CV_8UC3);
+	cv::Mat MatSub = out.colRange(0, width);
+	l.copyTo(MatSub);
+	MatSub = out.colRange(width, 2 * width);
+	r.copyTo(MatSub);
+}
+
+void stack4images( const cv::Mat& lt, const cv::Mat& rt, const cv::Mat& lb, const cv::Mat& rb, cv::Mat& out )
+{
+    CV_Assert( 4 * lt.rows == (lt.rows + rt.rows + lb.rows + rb.rows) );
+    CV_Assert( 4 * lt.cols == (lt.cols + rt.cols + lb.cols + rb.cols) );
+    CV_Assert( lt.type() == CV_8UC3 && rt.type() == CV_8UC3 && lb.type() == CV_8UC3 && rb.type() == CV_8UC3 );
+
+    const int width = lt.cols;
+    const int height = lt.rows;
+    cv::Mat MatSub;
+
+    cv::Mat Top(height, 2 * width, CV_8UC3, cv::Scalar::all(0));
+	MatSub = Top.colRange(0, width);
+	lt.copyTo(MatSub);
+	MatSub = Top.colRange(width, 2 * width);
+	rt.copyTo(MatSub);
+
+    cv::Mat Bottom(height, 2 * width, CV_8UC3, cv::Scalar::all(0));
+	MatSub = Bottom.colRange(0, width);
+	lb.copyTo(MatSub);
+	MatSub = Bottom.colRange(width, 2 * width);
+	rb.copyTo(MatSub);
+
+    out = cv::Mat::zeros(2 * height, 2 * width, CV_8UC3);
+	MatSub = out.rowRange(0, height);
+	Top.copyTo(MatSub);
+	MatSub = out.rowRange(height, 2 * height);
+	Bottom.copyTo(MatSub);
+}
+
 }

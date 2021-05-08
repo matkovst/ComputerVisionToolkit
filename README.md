@@ -5,7 +5,7 @@ My personal toolkit for doing CV experiments. It comes with:
 
 ## Requirements
 - **C++11** ( or higher ) compiler
-- **CMake** >= 2.8
+- **CMake** >= 3.10
 - **OpenCV** >= 3.0
 
 ## Build

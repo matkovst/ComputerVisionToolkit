@@ -9,3 +9,5 @@ add_subdirectory( Mask-RCNN )
 add_dependencies( mask-rcnn cvtoolkit )
 
 add_subdirectory( Optical-flow )
+
+add_subdirectory( Background-subtraction )

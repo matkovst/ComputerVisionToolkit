@@ -36,7 +36,7 @@ OpenCVPlayer::OpenCVPlayer(const std::string& input, double scaleFactor)
         cv::resize(m_frame0, m_frame0, cv::Size(0, 0), scaleFactor, scaleFactor);
     }
 
-    m_capture.set(cv::CAP_PROP_POS_MSEC, 0);
+    backToStart();
 
     m_fps = m_capture.get(cv::CAP_PROP_FPS);
     m_fps = ( m_fps > 120 ) ? 25 : m_fps; ///> Extremely high FPS appears in the case we cannot obtain real FPS
@@ -54,6 +54,7 @@ OpenCVPlayer::~OpenCVPlayer()
 void OpenCVPlayer::read(cv::Mat& out)
 {
     m_capture >> out;
+    ++m_frameNum;
     
     if ( m_doResize )
     {
@@ -103,6 +104,11 @@ const double OpenCVPlayer::fps() const noexcept
     return m_fps;
 }
 
+int OpenCVPlayer::frameNum() const noexcept
+{
+    return m_frameNum;
+}
+
 int OpenCVPlayer::getInputType(const std::string& input)
 {
     if( input.size() == 1 && isdigit(input[0]) )
@@ -129,6 +135,12 @@ int OpenCVPlayer::getInputType(const std::string& input)
     }
 
     return InputType::NONE;
+}
+
+void OpenCVPlayer::backToStart()
+{
+    m_capture.set(cv::CAP_PROP_POS_MSEC, 0);
+    m_frameNum = 0;
 }
 
 }

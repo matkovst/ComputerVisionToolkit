@@ -31,7 +31,9 @@ private:
     std::shared_ptr<OpenCVPlayer> m_player;
     bool m_pause { false };
 
-    void drawTips(cv::Mat& frame, bool record = false);
+    void drawTips(cv::Mat& frame);
+
+    void drawTelemetry(cv::Mat& frame, bool record = false);
 };
 
 }

@@ -39,9 +39,13 @@ public:
 
     bool set(int propId, double value);
 
+    void backToStart();
+
     const cv::Mat& frame0() const noexcept;
 
     const double fps() const noexcept;
+
+    int frameNum() const noexcept;
 
 private:
     cv::VideoCapture m_capture;
@@ -52,6 +56,7 @@ private:
     bool m_doResize { false };
     cv::Mat m_frame0;
     double m_fps;
+    int m_frameNum { 0 };
 
     int getInputType(const std::string& input);
 };
