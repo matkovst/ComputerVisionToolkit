@@ -1,7 +1,8 @@
-cmake_minimum_required( VERSION 2.8 )
+cmake_minimum_required( VERSION 3.10 )
 project( cvtoolkit )
 
-find_package( OpenCV REQUIRED )
+# Include OpenCV
+include( ${CMAKE_SOURCE_DIR}/FindOpenCV.txt )
 
 file(GLOB_RECURSE CVTOOLKIT_INCLUDES "*.hpp")
 file(GLOB_RECURSE CVTOOLKIT_SOURCES "*.cpp")

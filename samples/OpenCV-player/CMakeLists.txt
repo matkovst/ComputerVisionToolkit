@@ -1,7 +1,8 @@
-cmake_minimum_required( VERSION 2.8 )
+cmake_minimum_required( VERSION 3.10 )
 project( opencv-player )
 
-find_package( OpenCV REQUIRED )
+# Include OpenCV
+include( ${CMAKE_SOURCE_DIR}/FindOpenCV.txt )
 
 add_executable( ${PROJECT_NAME} main.cpp )
 
@@ -15,6 +16,6 @@ target_include_directories( ${PROJECT_NAME} PUBLIC ${OpenCV_INCLUDE_DIRS} )
 target_link_libraries( ${PROJECT_NAME} cvtoolkit )
 target_link_libraries( ${PROJECT_NAME} ${OpenCV_LIBS} )
 
-message(STATUS "CVTOOLKIT_DIR ${CVTOOLKIT_DIR}")
-message(STATUS "OpenCV_INCLUDE_DIRS: ${OpenCV_INCLUDE_DIRS}")
-message(STATUS "OpenCV_LIBS: ${OpenCV_LIBS}")
+install(TARGETS ${PROJECT_NAME}
+        CONFIGURATIONS Release
+        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)

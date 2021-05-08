@@ -1,7 +1,8 @@
 cmake_minimum_required( VERSION 2.8 )
 project( optical-flow )
 
-find_package( OpenCV REQUIRED )
+# Include OpenCV
+include( ${CMAKE_SOURCE_DIR}/FindOpenCV.txt )
 
 MACRO(add_example NAME)
     add_executable( ${NAME} ${NAME}.cpp )
@@ -15,12 +16,12 @@ MACRO(add_example NAME)
 
     target_link_libraries( ${NAME} cvtoolkit )
     target_link_libraries( ${NAME} ${OpenCV_LIBS} )
+
+    install(TARGETS ${NAME}
+        CONFIGURATIONS Release
+        RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
 ENDMACRO()
 
 add_example( lk )
 add_example( fback )
 add_example( dis )
-
-message(STATUS "CVTOOLKIT_DIR ${CVTOOLKIT_DIR}")
-message(STATUS "OpenCV_INCLUDE_DIRS: ${OpenCV_INCLUDE_DIRS}")
-message(STATUS "OpenCV_LIBS: ${OpenCV_LIBS}")

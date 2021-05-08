@@ -67,6 +67,7 @@ int main(int argc, char** argv)
 
     cvt::ObjectClasses vehicleClasses { {2, "car"}, {3, "motorcycle"}, {5, "bus"}, {7, "truck"} };
     cvt::ObjectClasses personClasses { {0, "person"} };
+    cvt::ObjectClasses dynamicClasses { {0, "person"}, {2, "car"}, {3, "motorcycle"}, {5, "bus"}, {7, "truck"} };
 
     /* Main loop */
     bool loop = true;
@@ -90,7 +91,7 @@ int main(int argc, char** argv)
 
         /* Computer vision magic */
         cvt::InferOuts dOuts;
-        detector.Infer( frame, dOuts, 0.25f, vehicleClasses );
+        detector.Infer( frame, dOuts, 0.25f, dynamicClasses );
         
         // cvt::InferOuts fdOuts;
         // fdOuts.reserve(dOuts.size());
