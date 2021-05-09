@@ -1,13 +1,14 @@
-#include <cvtoolkit/cvgui.hpp>
-
 #include <sstream>
+
+#include <cvtoolkit/cvgui.hpp>
 
 namespace cvt
 {
 
-GUI::GUI(const std::string& winName, const std::shared_ptr<OpenCVPlayer>& player)
+GUI::GUI(const std::string& winName, const std::shared_ptr<OpenCVPlayer>& player, const std::shared_ptr<MetricMaster>& metrics)
     : m_winName(winName)
     , m_player(player)
+    , m_metrics(metrics)
 {
     cv::namedWindow(m_winName, 1);
 }
@@ -64,40 +65,45 @@ void GUI::imshow(cv::Mat& frame, bool record)
 void GUI::drawTips(cv::Mat& frame)
 {
     cv::String text = "Esc/q - exit, p - pause, space - 1 sec forward, s - to start";
-    int fontFace = cv::FONT_HERSHEY_PLAIN;
-    double fontScale = 1.5;
-    int thickness = 2;
     
     int baseline = 0;
-    cv::Size textSize = cv::getTextSize(text, fontFace,
-                                fontScale, thickness, &baseline);
+    cv::Size textSize = cv::getTextSize(text, m_fontFace,
+                                m_fontScale, m_thickness, &baseline);
 
-    baseline += thickness;
+    baseline += m_thickness;
     
     cv::Point textOrg(0, frame.rows - baseline);
                 
     cv::rectangle(frame, textOrg + cv::Point(0, baseline),
-            textOrg + cv::Point(textSize.width, -(textSize.height + baseline)),
-            cv::Scalar(0, 0, 0), -1);
+                textOrg + cv::Point(textSize.width, -(textSize.height + baseline)),
+                cv::Scalar(0, 0, 0), -1);
 
-    cv::putText(frame, text, textOrg, fontFace, fontScale,
-        cv::Scalar(40, 220, 40), thickness, 8);
+    cv::putText(frame, text, textOrg, m_fontFace, m_fontScale,
+                m_primaryColor, m_thickness, 8);
 }
 
 void GUI::drawTelemetry(cv::Mat& frame, bool record)
 {
-    int fontFace = cv::FONT_HERSHEY_PLAIN;
-    double fontScale = 1.5;
-    int thickness = 2;
+    if ( !m_metrics )
+    {
+        return;
+    }
 
-    int ymargin = 20;
-    cv::putText(frame, "fno: " + std::to_string(m_player->frameNum()), cv::Point(0, ymargin), fontFace, fontScale,
-        cv::Scalar(40, 220, 40), thickness, 8);
-    ymargin += 20;
+    const int ymargin = 22;
+    int offset = ymargin;
+    cv::putText(frame, "frame no: " + std::to_string(m_metrics->totalCalls()), cv::Point(0, offset), m_fontFace, m_fontScale,
+                m_primaryColor, m_thickness, 8);
+    offset += ymargin;
+    cv::putText(frame, "curr. time (ms): " + std::to_string(m_metrics->currentTime()), cv::Point(0, offset), m_fontFace, m_fontScale,
+                m_primaryColor, m_thickness, 8);
+    offset += ymargin;
+    cv::putText(frame, "avg. time (ms): " + std::to_string(m_metrics->avgTime()), cv::Point(0, offset), m_fontFace, m_fontScale,
+                m_primaryColor, m_thickness, 8);
+    offset += ymargin;
     if ( record )
     {
-        cv::putText(frame, "Record", cv::Point(0, ymargin), fontFace, fontScale,
-            cv::Scalar(0, 0, 255), thickness, 8);
+        cv::putText(frame, "Record", cv::Point(0, offset), m_fontFace, m_fontScale,
+                    cv::Scalar(0, 0, 255), m_thickness, 8);
     }
 }
 

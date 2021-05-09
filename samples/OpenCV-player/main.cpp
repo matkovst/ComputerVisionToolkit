@@ -5,6 +5,7 @@
 
 #include <cvtoolkit/cvplayer.hpp>
 #include <cvtoolkit/cvgui.hpp>
+#include <cvtoolkit/utils.hpp>
 
 
 const static std::string WinName = "OpenCV Player";
@@ -49,7 +50,8 @@ int main(int argc, char** argv)
     std::shared_ptr<cvt::OpenCVPlayer> player = std::make_shared<cvt::OpenCVPlayer>(input, scaleFactor);
 
     /* Create GUI */
-    cvt::GUI gui(WinName, player);
+    auto metrics = std::make_shared<cvt::MetricMaster>();
+    cvt::GUI gui(WinName, player, metrics);
 
     std::cout << ">>> Input: " << input << std::endl;
     std::cout << ">>> Resolution: " << player->frame0().size() << std::endl;
@@ -76,9 +78,12 @@ int main(int argc, char** argv)
         }
 
         /* Computer vision magic */
-        analyticalCore( frame, out ); ///> Emplace here whatever logic
+        {
+            auto m = metrics->measure();
 
-    
+            analyticalCore( frame, out ); ///> Emplace here whatever logic
+        }
+
         /* Display info */
         out = frame.clone();
         if ( record )
@@ -92,6 +97,7 @@ int main(int argc, char** argv)
         gui.imshow(out, record);
     }
     
+    std::cout << ">>> " << metrics->summary() << std::endl;
     std::cout << ">>> Program successfully finished" << std::endl;
     return 0;
 }

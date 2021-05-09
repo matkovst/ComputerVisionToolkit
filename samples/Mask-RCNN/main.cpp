@@ -17,6 +17,7 @@ const cv::String argKeys =
         "{ resize r       |  1.0   | resize scale factor }"
         "{ record e       |  false | do record }"
         "{ @data d        |        | model data }"
+        "{ gpu g          |  0     | use GPU }"
         ;
 
 
@@ -36,6 +37,7 @@ int main(int argc, char** argv)
     bool doResize = (scaleFactor != 1.0);
     bool record = parser.get<bool>("record");
     std::string data = parser.get<std::string>("@data");
+    bool gpu = parser.get<bool>("gpu");
     
     if (!parser.check())
     {
@@ -47,11 +49,13 @@ int main(int argc, char** argv)
     std::shared_ptr<cvt::OpenCVPlayer> player = std::make_shared<cvt::OpenCVPlayer>(input, scaleFactor);
 
     /* Create GUI */
-    cvt::GUI gui(WinName, player);
+    auto metrics = std::make_shared<cvt::MetricMaster>();
+    cvt::GUI gui(WinName, player, metrics);
 
     std::cout << ">>> Input: " << input << std::endl;
     std::cout << ">>> Resolution: " << player->frame0().size() << std::endl;
     std::cout << ">>> Record: " << std::boolalpha << record << std::endl;
+    std::cout << ">>> GPU: " << std::boolalpha << gpu << std::endl;
 
     /* Main stuff */
     std::string textGraph = data + "/mask_rcnn_inception_v2_coco_2018_01_28.pbtxt";
@@ -60,8 +64,11 @@ int main(int argc, char** argv)
     int backend = cv::dnn::DNN_BACKEND_DEFAULT;
     int target = cv::dnn::DNN_TARGET_CPU;
 #if HAVE_OPENCV_CUDA && CV_MAJOR_VERSION > 3 && CV_MINOR_VERSION > 1
-    backend = cv::dnn::DNN_BACKEND_CUDA;
-    target = cv::dnn::DNN_TARGET_CUDA;
+    if ( gpu )
+    {
+        backend = cv::dnn::DNN_BACKEND_CUDA;
+        target = cv::dnn::DNN_TARGET_CUDA;
+    }
 #endif
     cvt::MaskRCNNObjectDetector detector(textGraph, modelWeights, cocoNames, backend, target);
 
@@ -90,12 +97,17 @@ int main(int argc, char** argv)
         }
 
         /* Computer vision magic */
+
         cvt::InferOuts dOuts;
-        detector.Infer( frame, dOuts, 0.25f, dynamicClasses );
-        
-        // cvt::InferOuts fdOuts;
-        // fdOuts.reserve(dOuts.size());
-        // detector.Filter( dOuts, fdOuts, vehicleClasses );
+        {
+            auto m = metrics->measure();
+
+            detector.Infer( frame, dOuts, 0.25f, dynamicClasses );
+            
+            // cvt::InferOuts fdOuts;
+            // fdOuts.reserve(dOuts.size());
+            // detector.Filter( dOuts, fdOuts, vehicleClasses );
+        }
     
         /* Display info & Record */
         out = frame.clone();
@@ -112,6 +124,7 @@ int main(int argc, char** argv)
         gui.imshow(out, record);
     }
     
+    std::cout << ">>> " << metrics->summary() << std::endl;
     std::cout << ">>> Program successfully finished" << std::endl;
     return 0;
 }

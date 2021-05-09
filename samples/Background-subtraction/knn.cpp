@@ -46,7 +46,8 @@ int main(int argc, char** argv)
     std::shared_ptr<cvt::OpenCVPlayer> player = std::make_shared<cvt::OpenCVPlayer>(input, scaleFactor);
 
     /* Create GUI */
-    cvt::GUI gui(WinName, player);
+    auto metrics = std::make_shared<cvt::MetricMaster>();
+    cvt::GUI gui(WinName, player, metrics);
 
     std::cout << ">>> Input: " << input << std::endl;
     std::cout << ">>> Resolution: " << player->frame0().size() << std::endl;
@@ -76,7 +77,11 @@ int main(int argc, char** argv)
         }
 
         /* Computer vision magic */
-        bgSubtractor->apply( frame, fgMask );
+        {
+            auto m = metrics->measure();
+            
+            bgSubtractor->apply( frame, fgMask );
+        }
         cv::cvtColor( fgMask, fgMask, cv::COLOR_GRAY2BGR );
 
         /* Display info */
@@ -92,6 +97,7 @@ int main(int argc, char** argv)
         gui.imshow(out, record);
     }
     
+    std::cout << ">>> " << metrics->summary() << std::endl;
     std::cout << ">>> Program successfully finished" << std::endl;
     return 0;
 }

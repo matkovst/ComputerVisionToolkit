@@ -1,5 +1,6 @@
 {
-    "cmake.outputLogEncoding": "win1251",
+    "cmake.outputLogEncoding": "windows1252",
+    "synthwave84.brightness": "0.45",
     "files.associations": {
         "algorithm": "cpp",
         "array": "cpp",

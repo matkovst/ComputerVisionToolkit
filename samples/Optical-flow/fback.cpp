@@ -44,7 +44,8 @@ int main(int argc, char** argv)
     std::shared_ptr<cvt::OpenCVPlayer> player = std::make_shared<cvt::OpenCVPlayer>(input, scaleFactor);
 
     /* Create GUI */
-    cvt::GUI gui(WinName, player);
+    auto metrics = std::make_shared<cvt::MetricMaster>();
+    cvt::GUI gui(WinName, player, metrics);
 
     std::cout << ">>> Input: " << input << std::endl;
     std::cout << ">>> Resolution: " << player->frame0().size() << std::endl;
@@ -79,7 +80,11 @@ int main(int argc, char** argv)
 
         /* Computer vision magic */
         cv::Mat flow(prevGray.size(), CV_32FC2);
-        cv::calcOpticalFlowFarneback(prevGray, gray, flow, 0.5, 3, 15, 3, 5, 1.2, 0);
+        {
+            auto m = metrics->measure();
+            
+            cv::calcOpticalFlowFarneback(prevGray, gray, flow, 0.5, 3, 15, 3, 5, 1.2, 0);
+        }
 
         // visualization
         cv::Mat flow_parts[2];
@@ -113,6 +118,7 @@ int main(int argc, char** argv)
         gui.imshow(out, record);
     }
     
+    std::cout << ">>> " << metrics->summary() << std::endl;
     std::cout << ">>> Program successfully finished" << std::endl;
     return 0;
 }

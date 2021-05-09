@@ -44,7 +44,8 @@ int main(int argc, char** argv)
     std::shared_ptr<cvt::OpenCVPlayer> player = std::make_shared<cvt::OpenCVPlayer>(input, scaleFactor);
 
     /* Create GUI */
-    cvt::GUI gui(WinName, player);
+    auto metrics = std::make_shared<cvt::MetricMaster>();
+    cvt::GUI gui(WinName, player, metrics);
 
     std::cout << ">>> Input: " << input << std::endl;
     std::cout << ">>> Resolution: " << player->frame0().size() << std::endl;
@@ -93,28 +94,32 @@ int main(int argc, char** argv)
         cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
 
         /* Computer vision magic */
-        // calculate optical flow
-        std::vector<uchar> status;
-        std::vector<float> err;
-        cv::TermCriteria criteria = cv::TermCriteria((cv::TermCriteria::COUNT) + (cv::TermCriteria::EPS), 10, 0.03);
-        cv::calcOpticalFlowPyrLK(prevGray, gray, p0, p1, status, err, cv::Size(15, 15), 2, criteria);
-
-        std::vector<cv::Point2f> good_new;
-        for ( uint i = 0; i < p0.size(); ++i )
         {
-            // Select good points
-            if( status[i] == 1 ) 
-            {
-                good_new.push_back(p1[i]);
-                // draw the tracks
-                cv::line(mask, p1[i], p0[i], colors[i], 2);
-                cv::circle(frame, p1[i], 5, colors[i], -1);
-            }
-        }
+            auto m = metrics->measure();
+            
+            // calculate optical flow
+            std::vector<uchar> status;
+            std::vector<float> err;
+            cv::TermCriteria criteria = cv::TermCriteria((cv::TermCriteria::COUNT) + (cv::TermCriteria::EPS), 10, 0.03);
+            cv::calcOpticalFlowPyrLK(prevGray, gray, p0, p1, status, err, cv::Size(15, 15), 2, criteria);
 
-        // Now update the previous frame and previous points
-        cv::swap( gray, prevGray );
-        p0 = good_new;
+            std::vector<cv::Point2f> good_new;
+            for ( uint i = 0; i < p0.size(); ++i )
+            {
+                // Select good points
+                if( status[i] == 1 ) 
+                {
+                    good_new.push_back(p1[i]);
+                    // draw the tracks
+                    cv::line(mask, p1[i], p0[i], colors[i], 2);
+                    cv::circle(frame, p1[i], 5, colors[i], -1);
+                }
+            }
+
+            // Now update the previous frame and previous points
+            cv::swap( gray, prevGray );
+            p0 = good_new;
+        }
     
         /* Display info */
         cv::add(frame, mask, out);
@@ -130,6 +135,7 @@ int main(int argc, char** argv)
         gui.imshow(out, record);
     }
     
+    std::cout << ">>> " << metrics->summary() << std::endl;
     std::cout << ">>> Program successfully finished" << std::endl;
     return 0;
 }
