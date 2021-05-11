@@ -3,6 +3,9 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/video/background_segm.hpp>
+#if HAVE_OPENCV_CUDA
+#include <opencv2/cudabgsegm.hpp>
+#endif
 
 #include <cvtoolkit/cvplayer.hpp>
 #include <cvtoolkit/cvgui.hpp>
@@ -16,6 +19,7 @@ const cv::String argKeys =
         "{ @input i       |  0     | input stream }"
         "{ resize r       |  1.0   | resize scale factor }"
         "{ record e       |  false | do record }"
+        "{ gpu g          |  false | use GPU }"
         ;
 
 
@@ -55,6 +59,7 @@ int main(int argc, char** argv)
     double scaleFactor = parser.get<double>("resize");
     bool doResize = (scaleFactor != 1.0);
     bool record = parser.get<bool>("record");
+    bool gpu = parser.get<bool>("gpu");
     
     if (!parser.check())
     {
@@ -64,6 +69,7 @@ int main(int argc, char** argv)
 
     /* Open stream */
     std::shared_ptr<cvt::OpenCVPlayer> player = std::make_shared<cvt::OpenCVPlayer>(input, scaleFactor);
+    const cv::Mat& pFrame0 = player->frame0();
 
     /* Create GUI */
     auto metrics = std::make_shared<cvt::MetricMaster>();
@@ -77,9 +83,21 @@ int main(int argc, char** argv)
     std::cout << ">>> Input: " << input << std::endl;
     std::cout << ">>> Resolution: " << player->frame0().size() << std::endl;
     std::cout << ">>> Record: " << std::boolalpha << record << std::endl;
+    std::cout << ">>> GPU: " << std::boolalpha << gpu << std::endl;
 
     /* Init KNN bg-subtractor */
     bgSubtractor = cv::createBackgroundSubtractorMOG2( History, VarThresh, true );
+#if HAVE_OPENCV_CUDA
+    if ( gpu )
+    {
+        bgSubtractor.release();
+        bgSubtractor = cv::cuda::createBackgroundSubtractorMOG2( History, VarThresh, true );
+    }
+
+    /* Pre-alloc arrays to improve speed */
+    cv::cuda::GpuMat dFrame = cv::cuda::GpuMat(pFrame0.size(), pFrame0.type());
+    cv::cuda::GpuMat dFgMask = cv::cuda::GpuMat(pFrame0.size(), pFrame0.type());
+#endif
 
     /* Main loop */
     bool loop = true;
@@ -105,7 +123,18 @@ int main(int argc, char** argv)
         {
             auto m = metrics->measure();
             
-            bgSubtractor->apply( frame, fgMask );
+            if ( gpu )
+            {
+#if HAVE_OPENCV_CUDA
+                dFrame.upload(frame);
+                bgSubtractor->apply( dFrame, dFgMask );
+                dFgMask.download(fgMask);
+#endif
+            }
+            else
+            {
+                bgSubtractor->apply( frame, fgMask );
+            }
         }
         cv::cvtColor( fgMask, fgMask, cv::COLOR_GRAY2BGR );
 
