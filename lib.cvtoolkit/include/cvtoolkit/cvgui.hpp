@@ -27,6 +27,8 @@ public:
 
     void imshow(cv::Mat& frame, bool record = false);
 
+    const std::string& WinName() const noexcept;
+
 private:
     std::string m_winName { "GUI" };
     std::shared_ptr<OpenCVPlayer> m_player;

@@ -7,7 +7,7 @@ include( ${CMAKE_SOURCE_DIR}/FindOpenCV.txt )
 MACRO(add_example NAME)
     add_executable( ${NAME} ${NAME}.cpp )
 
-    set(TARGET ${NAME} PROPERTY CMAKE_CXX_STANDARD 11)
+    set(TARGET ${NAME} PROPERTY CMAKE_CXX_STANDARD 14)
     set(TARGET ${NAME} PROPERTY CMAKE_CXX_STANDARD_REQUIRED ON)
     #set(TARGET ${NAME} PROPERTY CMAKE_CXX_EXTENSIONS OFF)
 
@@ -23,3 +23,4 @@ MACRO(add_example NAME)
 ENDMACRO()
 
 add_example( knn )
+add_example( mog2 )

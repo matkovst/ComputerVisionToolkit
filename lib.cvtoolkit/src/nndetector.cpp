@@ -1,5 +1,3 @@
-#pragma once
-
 #include <cvtoolkit/nndetector.hpp>
 
 #include <fstream>

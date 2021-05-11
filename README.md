@@ -7,6 +7,7 @@ My personal toolkit for doing CV experiments. It comes with:
 - **C++11** ( or higher ) compiler
 - **CMake** >= 3.10
 - **OpenCV** >= 3.0
+- ( optional ) OpenCV with CUDA support
 
 ## Build
 The whole project can be built with CMake

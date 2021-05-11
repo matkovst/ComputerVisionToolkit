@@ -62,6 +62,11 @@ void GUI::imshow(cv::Mat& frame, bool record)
     cv::imshow(m_winName, frame);
 }
 
+const std::string& GUI::WinName() const noexcept
+{
+    return m_winName;
+}
+
 void GUI::drawTips(cv::Mat& frame)
 {
     cv::String text = "Esc/q - exit, p - pause, space - 1 sec forward, s - to start";

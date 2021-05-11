@@ -1,5 +1,3 @@
-#pragma once
-
 #include <cvtoolkit/utils.hpp>
 
 namespace cvt

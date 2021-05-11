@@ -9,7 +9,7 @@
 #include <cvtoolkit/utils.hpp>
 
 
-const static std::string WinName = "KNN Background subtractor";
+const static std::string WinName = "MOG2 Background subtractor";
 
 const cv::String argKeys =
         "{ help usage ?   |        | print help }"
@@ -20,8 +20,8 @@ const cv::String argKeys =
 
 
 int History = 500;
-int Dist2Threshold = 400;
-cv::Ptr<cv::BackgroundSubtractorKNN> bgSubtractor;
+int VarThresh = 16;
+cv::Ptr<cv::BackgroundSubtractorMOG2> bgSubtractor;
 
 static void onHistoryChanged( int, void* )
 {
@@ -31,11 +31,11 @@ static void onHistoryChanged( int, void* )
    }
 }
 
-static void onDist2ThresholdChanged( int, void* )
+static void onVarThreshChanged( int, void* )
 {
    if ( !bgSubtractor.empty() )
    {
-       bgSubtractor->setDist2Threshold(static_cast<double>(Dist2Threshold));
+       bgSubtractor->setVarThreshold(static_cast<double>(VarThresh));
    }
 }
 
@@ -71,15 +71,15 @@ int main(int argc, char** argv)
 
     cv::createTrackbar( "History", gui.WinName(), &History, 5000, onHistoryChanged );
     onHistoryChanged( History, 0 );
-    cv::createTrackbar( "DistThresh", gui.WinName(), &Dist2Threshold, 2000, onDist2ThresholdChanged );
-    onDist2ThresholdChanged( Dist2Threshold, 0 );
+    cv::createTrackbar( "DistThresh", gui.WinName(), &VarThresh, 2000, onVarThreshChanged );
+    onVarThreshChanged( VarThresh, 0 );
 
     std::cout << ">>> Input: " << input << std::endl;
     std::cout << ">>> Resolution: " << player->frame0().size() << std::endl;
     std::cout << ">>> Record: " << std::boolalpha << record << std::endl;
 
     /* Init KNN bg-subtractor */
-    bgSubtractor = cv::createBackgroundSubtractorKNN( History, Dist2Threshold, true );
+    bgSubtractor = cv::createBackgroundSubtractorMOG2( History, VarThresh, true );
 
     /* Main loop */
     bool loop = true;
