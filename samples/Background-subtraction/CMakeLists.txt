@@ -24,3 +24,4 @@ ENDMACRO()
 
 add_example( knn )
 add_example( mog2 )
+add_example( exp-forgetting )
