@@ -10,6 +10,9 @@ endif()
 # Include OpenCV
 include( ${CMAKE_SOURCE_DIR}/FindOpenCV.txt )
 
+# Include nlohmann
+include_directories( ${CMAKE_SOURCE_DIR}/3rdparty/nlohmann )
+
 # Connect lib.cvtoolkit
 set( CVTOOLKIT_DIR ${CMAKE_SOURCE_DIR}/lib.cvtoolkit )
 set( CVTOOLKIT_INCLUDES ${CVTOOLKIT_DIR}/include )
