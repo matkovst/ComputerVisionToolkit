@@ -1,3 +1,5 @@
+[![GitHub release](https://img.shields.io/github/v/release/matkovst/ComputerVisionToolkit?include_prereleases)](https://github.com/matkovst/ComputerVisionToolkit/releases/tag/v1.0-alpha)
+
 # ComputerVisionToolkit
 My personal toolkit for doing CV experiments. It comes with:
 - *lib.cvtoolkit* library encapsulating the most common and helpful functions
