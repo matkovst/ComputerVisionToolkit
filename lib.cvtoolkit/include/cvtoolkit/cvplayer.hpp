@@ -47,6 +47,8 @@ public:
 
     int frameNum() const noexcept;
 
+    int getInputType(const std::string& input) const;
+
 private:
     cv::VideoCapture m_capture;
     cv::VideoWriter m_writer;
@@ -57,8 +59,6 @@ private:
     cv::Mat m_frame0;
     double m_fps;
     int m_frameNum { 0 };
-
-    int getInputType(const std::string& input);
 };
 
 }

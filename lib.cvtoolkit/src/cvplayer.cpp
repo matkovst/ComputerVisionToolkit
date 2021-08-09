@@ -10,13 +10,18 @@ OpenCVPlayer::OpenCVPlayer(const std::string& input, double scaleFactor)
     , m_doResize((scaleFactor != 1.0))
 {
     /* Open stream */
-    if( m_inputType == InputType::WEBCAM )
+    if ( m_inputType == InputType::WEBCAM )
     {
         m_capture.open(input[0] - '0');
     }
-    else if( m_inputType == InputType::VIDEO || m_inputType == InputType::LIVESTREAM )
+    else if ( m_inputType == InputType::VIDEO || m_inputType == InputType::LIVESTREAM )
     {
         m_capture.open(input);
+    }
+    else if ( m_inputType == InputType::IMAGE )
+    {
+        m_frame0 = cv::imread( input, cv::IMREAD_COLOR );
+        return;
     }
 
     if( !m_capture.isOpened() )
@@ -53,6 +58,11 @@ OpenCVPlayer::~OpenCVPlayer()
 
 void OpenCVPlayer::read(cv::Mat& out)
 {
+    if ( m_inputType == InputType::IMAGE )
+    {
+        out = m_frame0.clone();
+    }
+
     m_capture >> out;
     ++m_frameNum;
     
@@ -70,6 +80,21 @@ OpenCVPlayer& OpenCVPlayer::operator >> (cv::Mat& out)
 
 void OpenCVPlayer::write(const cv::Mat& frame)
 {
+    if ( m_inputType == InputType::IMAGE )
+    {
+        bool good = false;
+        try
+        {
+            good = cv::imwrite("output.png", frame);
+        }
+        catch (const cv::Exception& ex)
+        {
+            std::cerr << ">>> ERROR: Exception converting image to PNG format: " << ex.what() << std::endl;
+        }
+        if ( !good ) std::cerr << ">>> ERROR: Could not save image." << std::endl;
+        return;
+    }
+
     if ( !m_writer.isOpened() )
     {
         m_writer.open("output.avi", cv::VideoWriter::fourcc('M','J','P','G'), 
@@ -109,7 +134,7 @@ int OpenCVPlayer::frameNum() const noexcept
     return m_frameNum;
 }
 
-int OpenCVPlayer::getInputType(const std::string& input)
+int OpenCVPlayer::getInputType(const std::string& input) const
 {
     if( input.size() == 1 && isdigit(input[0]) )
     {

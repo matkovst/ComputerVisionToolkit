@@ -14,3 +14,5 @@ add_dependencies( json-parser cvtoolkit )
 add_subdirectory( Optical-flow )
 
 add_subdirectory( Background-subtraction )
+
+add_subdirectory( Image-processing )
