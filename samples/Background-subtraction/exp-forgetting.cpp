@@ -21,7 +21,7 @@ const cv::String argKeys =
 
 
 
-/** @brief Exponential forgetting - based Background/Foreground Segmentation Algorithm.
+/** @brief Exponential forgetting based Background/Foreground Segmentation Algorithm.
 
 The class implements the exponential forgetting background subtraction.
  */
@@ -29,11 +29,17 @@ class BackgroundSubtractorEF final : public cv::BackgroundSubtractor
 {
 public:
 
+    /** @brief constructor
+    Initializes subtractor with alpha (default 0.02).
+    */
     BackgroundSubtractorEF(float alpha = 0.02f)
         : m_alpha(alpha)
     {
     }
 
+    
+    /** @brief default destructor
+    */
     ~BackgroundSubtractorEF() = default;
 
     /** @brief Computes a foreground mask.

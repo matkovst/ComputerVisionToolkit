@@ -48,7 +48,7 @@ OpenCVPlayer::OpenCVPlayer(const std::string& input, double scaleFactor)
     backToStart();
 
     m_fps = m_capture.get(cv::CAP_PROP_FPS);
-    m_fps = ( m_fps > 120 ) ? 25 : m_fps; ///> Extremely high FPS appears in the case we cannot obtain real FPS
+    m_fps = ( m_fps > 120 ) ? 25 : m_fps; // Extremely high FPS appears in the case we cannot obtain real FPS
 }
 
 OpenCVPlayer::~OpenCVPlayer()

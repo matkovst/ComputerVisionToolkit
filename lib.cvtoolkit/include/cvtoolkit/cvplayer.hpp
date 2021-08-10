@@ -16,11 +16,11 @@ class OpenCVPlayer final
 public:
     enum InputType
     {
-        NONE,
-        IMAGE,
-        VIDEO,
-        LIVESTREAM,
-        WEBCAM
+        NONE, //!
+        IMAGE, //!< indicates that the input is an iamge
+        VIDEO, //!< indicates that the input is a recorded video
+        LIVESTREAM, //!< indicates that the input is a live stream
+        WEBCAM //!< indicates that the input is a webcam stream
     };
 
     OpenCVPlayer(const std::string& input, double scaleFactor = 1.0);

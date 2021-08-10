@@ -13,11 +13,13 @@ namespace cvt
     Its usage looks like
     @code{.cpp}
         auto metrics = std::make_shared<cvt::MetricMaster>();
+
         {
             auto m = metrics->measure();
 
             // do smth
         }
+
         std::cout << metrics->summary() << std::endl;
     @endcode
 */
