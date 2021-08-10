@@ -23,3 +23,4 @@ MACRO(add_example NAME)
 ENDMACRO()
 
 add_example( laplacian )
+add_example( hsv-filter )

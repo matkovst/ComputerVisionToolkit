@@ -16,3 +16,5 @@ add_subdirectory( Optical-flow )
 add_subdirectory( Background-subtraction )
 
 add_subdirectory( Image-processing )
+
+add_subdirectory( Custom-pipeline )

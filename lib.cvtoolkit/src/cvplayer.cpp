@@ -21,6 +21,10 @@ OpenCVPlayer::OpenCVPlayer(const std::string& input, double scaleFactor)
     else if ( m_inputType == InputType::IMAGE )
     {
         m_frame0 = cv::imread( input, cv::IMREAD_COLOR );
+        if ( m_doResize )
+        {
+            cv::resize(m_frame0, m_frame0, cv::Size(0, 0), scaleFactor, scaleFactor);
+        }
         return;
     }
 
@@ -61,6 +65,7 @@ void OpenCVPlayer::read(cv::Mat& out)
     if ( m_inputType == InputType::IMAGE )
     {
         out = m_frame0.clone();
+        return;
     }
 
     m_capture >> out;
