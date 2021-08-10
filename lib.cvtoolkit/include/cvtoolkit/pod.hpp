@@ -7,13 +7,20 @@
 namespace cvt
 {
 
+/** @brief NN output struct
+*/
 struct InferOut
 {
     int classId;
+
     std::string className;
+
     float confidence;
+
     cv::Rect location;
-    // std::vector<std::vector<cv::Point>> contour;
+
+    /** (optional) Semantic object mask.
+     */
     cv::Mat objectMask;
 };
 

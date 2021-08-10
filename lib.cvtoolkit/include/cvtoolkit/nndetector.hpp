@@ -15,6 +15,8 @@ static const float DEFAULT_CONF = 0.25f;
 using ObjectClasses = std::map<int, std::string>;
 
 
+/*! @brief The base class for all neural network detectors.
+*/
 class NNDetector
 {
 public:
@@ -27,7 +29,10 @@ protected:
 };
 
 
+/*! @brief The base class for all neural network object detectors.
 
+    The derived classes inherited from this class may solve detection problems as well as semantic segmentation problems.
+*/
 class ObjectNNDetector : public NNDetector
 {
 public:
@@ -35,18 +40,39 @@ public:
     
     virtual ~ObjectNNDetector() = default;
 
+    /*! @brief Performes model inference.
+
+        @param frame input frame
+        @param out output structure
+        @param confThreshold minimum allowed object confidence
+        @param acceptedClasses the list of accepted classes required for filtration. 
+        If none, no filtration is performed.
+    */
     virtual void Infer( const cv::Mat& frame, InferOuts& out, 
                         float confThreshold = DEFAULT_CONF, const ObjectClasses& acceptedClasses = ObjectClasses() ) = 0;
 
+
+    /*! @brief Performes model output filtration.
+
+        @param in raw model output
+        @param out filtered model output
+        @param acceptedClasses the list of accepted classes required for filtration.
+    */
     virtual void Filter( const InferOuts& in, InferOuts& out, const ObjectClasses& acceptedClasses ) = 0;
 
 protected:
     ObjectClasses m_objectClasses;
 
+    /*! @brief Reads class names from file.
+
+        @param classPath path to the class names file
+    */
     virtual void readObjectClasses( const std::string& classPath ) = 0;
 };
 
 
+/*! @brief The class implements Mask R-CNN alhorithm.
+*/
 class MaskRCNNObjectDetector final : public ObjectNNDetector
 {
 public:

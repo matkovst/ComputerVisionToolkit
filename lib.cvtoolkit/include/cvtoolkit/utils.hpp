@@ -12,6 +12,12 @@
 namespace cvt
 {
 
+/*! @brief Checks if vector is valid.
+
+    @param u vector
+
+    @return Says whether vector is valid or not
+ */
 bool vectorOk( cv::Point2f u );
 
 void drawMotionField( const cv::Mat_<cv::Point2f>& optflow, cv::Mat& out, int stride );

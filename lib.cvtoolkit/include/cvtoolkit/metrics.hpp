@@ -8,6 +8,19 @@
 namespace cvt
 {
 
+/*! @brief The class for taking readings of a code scope.
+
+    Its usage looks like
+    @code{.cpp}
+        auto metrics = std::make_shared<cvt::MetricMaster>();
+        {
+            auto m = metrics->measure();
+
+            // do smth
+        }
+        std::cout << metrics->summary() << std::endl;
+    @endcode
+*/
 class MetricMaster final : public std::enable_shared_from_this<MetricMaster>
 {
 
