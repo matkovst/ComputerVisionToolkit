@@ -78,20 +78,21 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
-<tr class="memitem:a8dc5901ad68d67ee0be81b6296af3a29"><td class="memItemLeft" align="right" valign="top"><a id="a8dc5901ad68d67ee0be81b6296af3a29"></a>enum &#160;</td><td class="memItemRight" valign="bottom"><b>InputType</b> { <br />
+<tr class="memitem:a8dc5901ad68d67ee0be81b6296af3a29"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcvt_1_1_open_c_v_player.html#a8dc5901ad68d67ee0be81b6296af3a29">InputType</a> { <br />
 &#160;&#160;<b>NONE</b>
-, <b>IMAGE</b>
-, <b>VIDEO</b>
-, <b>LIVESTREAM</b>
+, <a class="el" href="classcvt_1_1_open_c_v_player.html#a8dc5901ad68d67ee0be81b6296af3a29a9c39a651a7b7f505a096b21a09914a55">IMAGE</a>
+, <a class="el" href="classcvt_1_1_open_c_v_player.html#a8dc5901ad68d67ee0be81b6296af3a29a3b09330232cdaadfa07661d2e4f2eca0">VIDEO</a>
+, <a class="el" href="classcvt_1_1_open_c_v_player.html#a8dc5901ad68d67ee0be81b6296af3a29a265978dccb05e9d2e653664f4bdec258">LIVESTREAM</a>
 , <br />
-&#160;&#160;<b>WEBCAM</b>
+&#160;&#160;<a class="el" href="classcvt_1_1_open_c_v_player.html#a8dc5901ad68d67ee0be81b6296af3a29ad9958915764cd7dd2655d41536e1397a">WEBCAM</a>
 <br />
  }</td></tr>
 <tr class="separator:a8dc5901ad68d67ee0be81b6296af3a29"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a5396e97454e8d26be27451b30b21e459"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcvt_1_1_open_c_v_player.html#a5396e97454e8d26be27451b30b21e459">OpenCVPlayer</a> (const std::string &amp;input, double scaleFactor=1.0)</td></tr>
+<tr class="memitem:a5396e97454e8d26be27451b30b21e459"><td class="memItemLeft" align="right" valign="top"><a id="a5396e97454e8d26be27451b30b21e459"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>OpenCVPlayer</b> (const std::string &amp;input, double scaleFactor=1.0)</td></tr>
 <tr class="separator:a5396e97454e8d26be27451b30b21e459"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad3d0da61459bb821b44b2f4e02f3a309"><td class="memItemLeft" align="right" valign="top"><a id="ad3d0da61459bb821b44b2f4e02f3a309"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>read</b> (cv::Mat &amp;out)</td></tr>
@@ -127,41 +128,34 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>frameNum</b> () const 
 int&#160;</td><td class="memItemRight" valign="bottom"><b>getInputType</b> (const std::string &amp;input) const</td></tr>
 <tr class="separator:ad35f76d83a282daf23fedcdd6b73e6ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a5396e97454e8d26be27451b30b21e459"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5396e97454e8d26be27451b30b21e459">&#9670;&nbsp;</a></span>OpenCVPlayer()</h2>
+<h2 class="groupheader">Member Enumeration Documentation</h2>
+<a id="a8dc5901ad68d67ee0be81b6296af3a29"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8dc5901ad68d67ee0be81b6296af3a29">&#9670;&nbsp;</a></span>InputType</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">cvt::OpenCVPlayer::OpenCVPlayer </td>
-          <td>(</td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>input</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>scaleFactor</em> = <code>1.0</code>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
+          <td class="memname">enum <a class="el" href="classcvt_1_1_open_c_v_player.html#a8dc5901ad68d67ee0be81b6296af3a29">cvt::OpenCVPlayer::InputType</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
-<blockquote class="doxtable">
-<p>Extremely high FPS appears in the case we cannot obtain real FPS </p>
-</blockquote>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a8dc5901ad68d67ee0be81b6296af3a29a9c39a651a7b7f505a096b21a09914a55"></a>IMAGE&#160;</td><td class="fielddoc"><p>indicates that the input is an iamge </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a8dc5901ad68d67ee0be81b6296af3a29a3b09330232cdaadfa07661d2e4f2eca0"></a>VIDEO&#160;</td><td class="fielddoc"><p>indicates that the input is a recorded video </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a8dc5901ad68d67ee0be81b6296af3a29a265978dccb05e9d2e653664f4bdec258"></a>LIVESTREAM&#160;</td><td class="fielddoc"><p>indicates that the input is a live stream </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a8dc5901ad68d67ee0be81b6296af3a29ad9958915764cd7dd2655d41536e1397a"></a>WEBCAM&#160;</td><td class="fielddoc"><p>indicates that the input is a webcam stream </p>
+</td></tr>
+</table>
 
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following files:<ul>
-<li>lib.cvtoolkit/include/cvtoolkit/<a class="el" href="cvplayer_8hpp_source.html">cvplayer.hpp</a></li>
-<li>lib.cvtoolkit/src/cvplayer.cpp</li>
+<li>F:/Projects/ComputerVisionToolkit/lib.cvtoolkit/include/cvtoolkit/<a class="el" href="cvplayer_8hpp_source.html">cvplayer.hpp</a></li>
+<li>F:/Projects/ComputerVisionToolkit/lib.cvtoolkit/src/cvplayer.cpp</li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

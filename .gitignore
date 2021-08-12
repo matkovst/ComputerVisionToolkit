@@ -1,0 +1,6 @@
+bin*
+build*
+data*
+samples/OpenCV-player/build*
+lib.cvtoolkit/lib
+.vscode/*

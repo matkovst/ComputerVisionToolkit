@@ -71,7 +71,7 @@ $(function() {
 </div><!--header-->
 <div class="contents">
 
-<p>Exponential forgetting - based Background/Foreground Segmentation Algorithm.  
+<p>Exponential forgetting based Background/Foreground Segmentation Algorithm.  
  <a href="class_background_subtractor_e_f.html#details">More...</a></p>
 <div class="dynheader">
 Inheritance diagram for BackgroundSubtractorEF:</div>
@@ -82,28 +82,47 @@ Inheritance diagram for BackgroundSubtractorEF:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:aa0a0c1a4bd1a81581331d75f689e7dd6"><td class="memItemLeft" align="right" valign="top"><a id="aa0a0c1a4bd1a81581331d75f689e7dd6"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>BackgroundSubtractorEF</b> (float alpha=0.02f)</td></tr>
-<tr class="separator:aa0a0c1a4bd1a81581331d75f689e7dd6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af6008420fcfe3b74b5d3eeeea093755c"><td class="memItemLeft" align="right" valign="top"><a id="af6008420fcfe3b74b5d3eeeea093755c"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_background_subtractor_e_f.html#af6008420fcfe3b74b5d3eeeea093755c">BackgroundSubtractorEF</a> (double thresh2=16.0, double alpha=0.02)</td></tr>
+<tr class="memdesc:af6008420fcfe3b74b5d3eeeea093755c"><td class="mdescLeft">&#160;</td><td class="mdescRight">constructor Initializes subtractor with alpha (default 0.02). <br /></td></tr>
+<tr class="separator:af6008420fcfe3b74b5d3eeeea093755c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4b3197aeefc30250572b31f095f65420"><td class="memItemLeft" align="right" valign="top"><a id="a4b3197aeefc30250572b31f095f65420"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_background_subtractor_e_f.html#a4b3197aeefc30250572b31f095f65420">~BackgroundSubtractorEF</a> ()=default</td></tr>
+<tr class="memdesc:a4b3197aeefc30250572b31f095f65420"><td class="mdescLeft">&#160;</td><td class="mdescRight">default destructor <br /></td></tr>
+<tr class="separator:a4b3197aeefc30250572b31f095f65420"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4627de7b9639928d23a47229c290ea37"><td class="memItemLeft" align="right" valign="top"><a id="a4627de7b9639928d23a47229c290ea37"></a>
 virtual CV_WRAP void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_background_subtractor_e_f.html#a4627de7b9639928d23a47229c290ea37">apply</a> (cv::InputArray _image, cv::OutputArray _fgMask, double learningRate=-1) CV_OVERRIDE</td></tr>
 <tr class="memdesc:a4627de7b9639928d23a47229c290ea37"><td class="mdescLeft">&#160;</td><td class="mdescRight">Computes a foreground mask. <br /></td></tr>
 <tr class="separator:a4627de7b9639928d23a47229c290ea37"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae2f17b90a0a50b4cb3660939e984bce0"><td class="memItemLeft" align="right" valign="top">virtual CV_WRAP void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_background_subtractor_e_f.html#ae2f17b90a0a50b4cb3660939e984bce0">getBackgroundImage</a> (cv::OutputArray _backgroundImage) const</td></tr>
-<tr class="memdesc:ae2f17b90a0a50b4cb3660939e984bce0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Computes a background image.  <a href="class_background_subtractor_e_f.html#ae2f17b90a0a50b4cb3660939e984bce0">More...</a><br /></td></tr>
+<tr class="memdesc:ae2f17b90a0a50b4cb3660939e984bce0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a background image in CV_8UC3 type.  <a href="class_background_subtractor_e_f.html#ae2f17b90a0a50b4cb3660939e984bce0">More...</a><br /></td></tr>
 <tr class="separator:ae2f17b90a0a50b4cb3660939e984bce0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae7ccb060c606a3fe4a997dc87cbc6080"><td class="memItemLeft" align="right" valign="top"><a id="ae7ccb060c606a3fe4a997dc87cbc6080"></a>
-virtual CV_WRAP float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_background_subtractor_e_f.html#ae7ccb060c606a3fe4a997dc87cbc6080">getAlpha</a> () const</td></tr>
-<tr class="memdesc:ae7ccb060c606a3fe4a997dc87cbc6080"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the alpha. <br /></td></tr>
-<tr class="separator:ae7ccb060c606a3fe4a997dc87cbc6080"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6801b4468102b4005339b5908b44a03f"><td class="memItemLeft" align="right" valign="top"><a id="a6801b4468102b4005339b5908b44a03f"></a>
-virtual CV_WRAP void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_background_subtractor_e_f.html#a6801b4468102b4005339b5908b44a03f">setAlpha</a> (float alpha)</td></tr>
-<tr class="memdesc:a6801b4468102b4005339b5908b44a03f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the alpha. <br /></td></tr>
-<tr class="separator:a6801b4468102b4005339b5908b44a03f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acf7f757994d2a162aac29b9b00d01b62"><td class="memItemLeft" align="right" valign="top">virtual CV_WRAP void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_background_subtractor_e_f.html#acf7f757994d2a162aac29b9b00d01b62">getStdev2Image</a> (cv::OutputArray _stdev2Image) const</td></tr>
+<tr class="memdesc:acf7f757994d2a162aac29b9b00d01b62"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a stdev2 image in CV_8UC3 type.  <a href="class_background_subtractor_e_f.html#acf7f757994d2a162aac29b9b00d01b62">More...</a><br /></td></tr>
+<tr class="separator:acf7f757994d2a162aac29b9b00d01b62"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9549f42d546ad6448a13810228d6c5a4"><td class="memItemLeft" align="right" valign="top">virtual CV_WRAP void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_background_subtractor_e_f.html#a9549f42d546ad6448a13810228d6c5a4">getMahalanobisDistImage</a> (cv::OutputArray _mahalanobisDistImage) const</td></tr>
+<tr class="memdesc:a9549f42d546ad6448a13810228d6c5a4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a mahalanobis distance image in CV_8UC3 type.  <a href="class_background_subtractor_e_f.html#a9549f42d546ad6448a13810228d6c5a4">More...</a><br /></td></tr>
+<tr class="separator:a9549f42d546ad6448a13810228d6c5a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae09be9eac2f6de6a965c0a9b95c62e68"><td class="memItemLeft" align="right" valign="top"><a id="ae09be9eac2f6de6a965c0a9b95c62e68"></a>
+virtual CV_WRAP double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_background_subtractor_e_f.html#ae09be9eac2f6de6a965c0a9b95c62e68">getThresh2</a> () const</td></tr>
+<tr class="memdesc:ae09be9eac2f6de6a965c0a9b95c62e68"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the thresh2. <br /></td></tr>
+<tr class="separator:ae09be9eac2f6de6a965c0a9b95c62e68"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aedad5e3f861d66627b849fbef41f09af"><td class="memItemLeft" align="right" valign="top"><a id="aedad5e3f861d66627b849fbef41f09af"></a>
+virtual CV_WRAP void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_background_subtractor_e_f.html#aedad5e3f861d66627b849fbef41f09af">setThresh2</a> (double thresh2)</td></tr>
+<tr class="memdesc:aedad5e3f861d66627b849fbef41f09af"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the thresh2. <br /></td></tr>
+<tr class="separator:aedad5e3f861d66627b849fbef41f09af"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af547876fdb62dc40d9fab46d1d17b532"><td class="memItemLeft" align="right" valign="top"><a id="af547876fdb62dc40d9fab46d1d17b532"></a>
+virtual CV_WRAP double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_background_subtractor_e_f.html#af547876fdb62dc40d9fab46d1d17b532">getAlpha</a> () const</td></tr>
+<tr class="memdesc:af547876fdb62dc40d9fab46d1d17b532"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the alpha. <br /></td></tr>
+<tr class="separator:af547876fdb62dc40d9fab46d1d17b532"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa8cce88ae904d6265d5f4046857a8899"><td class="memItemLeft" align="right" valign="top"><a id="aa8cce88ae904d6265d5f4046857a8899"></a>
+virtual CV_WRAP void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_background_subtractor_e_f.html#aa8cce88ae904d6265d5f4046857a8899">setAlpha</a> (double alpha)</td></tr>
+<tr class="memdesc:aa8cce88ae904d6265d5f4046857a8899"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the alpha. <br /></td></tr>
+<tr class="separator:aa8cce88ae904d6265d5f4046857a8899"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Exponential forgetting - based Background/Foreground Segmentation Algorithm. </p>
-<p>The class implements the exponential forgetting background subtraction. </p>
+<div class="textblock"><p>Exponential forgetting based Background/Foreground Segmentation Algorithm. </p>
+<p>The class implements the exponential forgetting (EF) background subtraction. The background image is model with a Gaussian distribution, whose mean and covariance are calculated via EF formulas. The covariance matrix are taken isotropic for simplicity. The foreground image is obtained by thresholding Mahalanobis distance from the image to the mean. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="ae2f17b90a0a50b4cb3660939e984bce0"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ae2f17b90a0a50b4cb3660939e984bce0">&#9670;&nbsp;</a></span>getBackgroundImage()</h2>
@@ -129,7 +148,7 @@ virtual CV_WRAP void&#160;</td><td class="memItemRight" valign="bottom"><a class
 </table>
 </div><div class="memdoc">
 
-<p>Computes a background image. </p>
+<p>Returns a background image in CV_8UC3 type. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">backgroundImage</td><td>The output background image.</td></tr>
@@ -140,8 +159,76 @@ virtual CV_WRAP void&#160;</td><td class="memItemRight" valign="bottom"><a class
 
 </div>
 </div>
+<a id="a9549f42d546ad6448a13810228d6c5a4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9549f42d546ad6448a13810228d6c5a4">&#9670;&nbsp;</a></span>getMahalanobisDistImage()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual CV_WRAP void BackgroundSubtractorEF::getMahalanobisDistImage </td>
+          <td>(</td>
+          <td class="paramtype">cv::OutputArray&#160;</td>
+          <td class="paramname"><em>_mahalanobisDistImage</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Returns a mahalanobis distance image in CV_8UC3 type. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">backgroundImage</td><td>The output stdev2 image. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="acf7f757994d2a162aac29b9b00d01b62"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acf7f757994d2a162aac29b9b00d01b62">&#9670;&nbsp;</a></span>getStdev2Image()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual CV_WRAP void BackgroundSubtractorEF::getStdev2Image </td>
+          <td>(</td>
+          <td class="paramtype">cv::OutputArray&#160;</td>
+          <td class="paramname"><em>_stdev2Image</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Returns a stdev2 image in CV_8UC3 type. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">backgroundImage</td><td>The output stdev2 image. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <hr/>The documentation for this class was generated from the following file:<ul>
-<li>samples/Background-subtraction/exp-forgetting.cpp</li>
+<li>F:/Projects/ComputerVisionToolkit/samples/Background-subtraction/exp-forgetting.cpp</li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

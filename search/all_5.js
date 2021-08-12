@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['maskrcnnobjectdetector_8',['MaskRCNNObjectDetector',['../classcvt_1_1_mask_r_c_n_n_object_detector.html',1,'cvt']]],
-  ['metricmaster_9',['MetricMaster',['../classcvt_1_1_metric_master.html',1,'cvt']]]
+  ['livestream_13',['LIVESTREAM',['../classcvt_1_1_open_c_v_player.html#a8dc5901ad68d67ee0be81b6296af3a29a265978dccb05e9d2e653664f4bdec258',1,'cvt::OpenCVPlayer']]]
 ];

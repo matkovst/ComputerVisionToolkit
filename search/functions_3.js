@@ -1,4 +1,8 @@
 var searchData=
 [
-  ['infer_29',['Infer',['../classcvt_1_1_object_n_n_detector.html#ad47e6fb3ded4ddfcc2f609519f8a2d07',1,'cvt::ObjectNNDetector::Infer()'],['../classcvt_1_1_mask_r_c_n_n_object_detector.html#aa152fb3ef11dbd953278ace0a1a6c840',1,'cvt::MaskRCNNObjectDetector::Infer()']]]
+  ['getalpha_38',['getAlpha',['../class_background_subtractor_e_f.html#af547876fdb62dc40d9fab46d1d17b532',1,'BackgroundSubtractorEF']]],
+  ['getbackgroundimage_39',['getBackgroundImage',['../class_background_subtractor_e_f.html#ae2f17b90a0a50b4cb3660939e984bce0',1,'BackgroundSubtractorEF']]],
+  ['getmahalanobisdistimage_40',['getMahalanobisDistImage',['../class_background_subtractor_e_f.html#a9549f42d546ad6448a13810228d6c5a4',1,'BackgroundSubtractorEF']]],
+  ['getstdev2image_41',['getStdev2Image',['../class_background_subtractor_e_f.html#acf7f757994d2a162aac29b9b00d01b62',1,'BackgroundSubtractorEF']]],
+  ['getthresh2_42',['getThresh2',['../class_background_subtractor_e_f.html#ae09be9eac2f6de6a965c0a9b95c62e68',1,'BackgroundSubtractorEF']]]
 ];
