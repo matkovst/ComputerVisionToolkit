@@ -23,7 +23,8 @@ const cv::String argKeys =
 
 /** @brief Exponential forgetting based Background/Foreground Segmentation Algorithm.
 
-The class implements the exponential forgetting background subtraction.
+The class implements the exponential forgetting (EF) background subtraction. The background image is model with a Gaussian distribution, whose mean and covariance are calculated via EF formulas.
+The covariance matrix are taken isotropic for simplicity. The foreground image is obtained by thresholding Mahalanobis distance from the image to the mean.
  */
 class BackgroundSubtractorEF final : public cv::BackgroundSubtractor
 {
@@ -32,8 +33,9 @@ public:
     /** @brief constructor
     Initializes subtractor with alpha (default 0.02).
     */
-    BackgroundSubtractorEF(float alpha = 0.02f)
-        : m_alpha(alpha)
+    BackgroundSubtractorEF(double thresh2 = 16.0, double alpha = 0.02)
+        : m_thresh2(thresh2)
+        , m_alpha(alpha)
     {
     }
     
@@ -58,7 +60,7 @@ public:
         if ( m_background_32FC3.empty() )
         {
             image.convertTo(m_background_32FC3, CV_32FC3);
-            m_stdev2 = cv::Mat::zeros(m_background_32FC3.size(), m_background_32FC3.type());
+            m_stdev2 = cv::Mat::ones(m_background_32FC3.size(), m_background_32FC3.type());
             m_MahalanobisDist = cv::Mat::zeros(m_background_32FC3.size(), CV_32FC1);
             return;
         }
@@ -86,7 +88,7 @@ public:
         /* Compute Mahalanobis distance btw Image and Background */
         cv::divide(m_currMeanDiff2, m_stdev2, m_MahalanobisDistVec);
         cv::transform(m_MahalanobisDistVec, m_MahalanobisDist, cv::Matx13f(1, 1, 1));
-        cv::sqrt(m_MahalanobisDist, m_MahalanobisDist);
+        // cv::sqrt(m_MahalanobisDist, m_MahalanobisDist);
 
         // /* Segment fg/bg with absdiff */
         // cv::Mat diff_32FC3;
@@ -95,7 +97,8 @@ public:
         // fgMask_32FC1.convertTo(fgMask, CV_8UC1);
 
         /* Segment fg/bg with Mahalanobis dist */
-        m_MahalanobisDist.convertTo(fgMask, CV_8UC1);
+        cv::threshold(m_MahalanobisDist, m_fgMask_32FC3, m_thresh2, 255, cv::THRESH_BINARY);
+        m_fgMask_32FC3.convertTo(fgMask, CV_8UC1);
     }
 
     /** @brief Returns a background image in CV_8UC3 type.
@@ -128,22 +131,36 @@ public:
         m_MahalanobisDist.convertTo(_mahalanobisDistImage, CV_8UC3);
     }
 
+    /** @brief Returns the thresh2
+    */
+    CV_WRAP virtual double getThresh2() const 
+    {
+        return m_thresh2;
+    }
+    /** @brief Sets the thresh2
+    */
+    CV_WRAP virtual void setThresh2(double thresh2) 
+    {
+        m_thresh2 = thresh2;
+    }
+
     /** @brief Returns the alpha
     */
-    CV_WRAP virtual float getAlpha() const 
+    CV_WRAP virtual double getAlpha() const 
     {
         return m_alpha;
     }
     /** @brief Sets the alpha
     */
-    CV_WRAP virtual void setAlpha(float alpha) 
+    CV_WRAP virtual void setAlpha(double alpha) 
     {
         m_alpha = alpha;
     }
 
 private:
     unsigned long long m_frameNum { 0 };
-    float m_alpha { 0.02f };
+    double m_thresh2 { 16.0 };
+    double m_alpha { 0.02 };
     cv::Mat m_background_32FC3;
     cv::Mat m_prevMeanDiff;
     cv::Mat m_currMeanDiff;
@@ -152,20 +169,29 @@ private:
     cv::Mat m_stdev2;
     cv::Mat m_MahalanobisDistVec;
     cv::Mat m_MahalanobisDist;
+    cv::Mat m_fgMask_32FC3;
 };
 
 /** @brief Creates EF Background Subtractor
+
+    @param thresh2 Threshold on the squared Mahalanobis distance between the pixel and the model
+    to decide whether a pixel is well described by the background model. This parameter does not
+    affect the background update.
+    @param alpha The value between 0 and 1 that indicates how fast the background model is
+    learnt. Negative parameter value makes the algorithm to use some automatically chosen learning
+    rate. 0 means that the background model is not updated at all, 1 means that the background model
+    is completely reinitialized from the last frame.
  */
-cv::Ptr<BackgroundSubtractorEF> createBackgroundSubtractorEF(float alpha = 0.02f)
+cv::Ptr<BackgroundSubtractorEF> createBackgroundSubtractorEF(double thresh2 = 16.0, double alpha = 0.02)
 {
-    return cv::makePtr<BackgroundSubtractorEF>(alpha);
+    return cv::makePtr<BackgroundSubtractorEF>(thresh2, alpha);
 }
 
 
 
 cv::Ptr<BackgroundSubtractorEF> bgSubtractor;
 int Alpha = 2;
-int Thresh = 0;
+int Thresh = 4;
 
 static void onAlphaChanged( int, void* ) { }
 
@@ -209,7 +235,7 @@ int main(int argc, char** argv)
     std::cout << ">>> Resolution: " << player->frame0().size() << std::endl;
     std::cout << ">>> Record: " << std::boolalpha << record << std::endl;
 
-    bgSubtractor = createBackgroundSubtractorEF(Alpha / 1000.f);
+    bgSubtractor = createBackgroundSubtractorEF(Thresh * Thresh, Alpha / 1000.f);
 
     /* Main loop */
     bool loop = true;
@@ -238,12 +264,13 @@ int main(int argc, char** argv)
         {
             auto m = metrics->measure();
 
+            bgSubtractor->setThresh2(Thresh * Thresh);
             bgSubtractor->setAlpha(Alpha / 1000.f);
             bgSubtractor->apply(frame, fgMask);
-            if ( Thresh > 0 )
-            {
-                cv::threshold(fgMask, fgMask, Thresh, 255, cv::THRESH_BINARY);
-            }
+            // if ( Thresh > 0 )
+            // {
+            //     cv::threshold(fgMask, fgMask, Thresh, 255, cv::THRESH_BINARY);
+            // }
         }
 
         /* Display info */
