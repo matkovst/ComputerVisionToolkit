@@ -1,5 +1,6 @@
 var searchData=
 [
-  ['readme_14',['README',['../md__r_e_a_d_m_e.html',1,'']]],
-  ['readobjectclasses_15',['readObjectClasses',['../classcvt_1_1_object_n_n_detector.html#ab167d65e2afafabea9d777f4c7e6382a',1,'cvt::ObjectNNDetector::readObjectClasses()'],['../classcvt_1_1_mask_r_c_n_n_object_detector.html#a2fbc47c3d73899c2ab8f8c720adaa96e',1,'cvt::MaskRCNNObjectDetector::readObjectClasses()']]]
+  ['objectmask_17',['objectMask',['../structcvt_1_1_infer_out.html#ae8f203620f1a7accb75084b437cfc2de',1,'cvt::InferOut']]],
+  ['objectnndetector_18',['ObjectNNDetector',['../classcvt_1_1_object_n_n_detector.html',1,'cvt']]],
+  ['opencvplayer_19',['OpenCVPlayer',['../classcvt_1_1_open_c_v_player.html',1,'cvt']]]
 ];

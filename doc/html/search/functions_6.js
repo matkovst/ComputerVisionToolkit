@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['setalpha_32',['setAlpha',['../class_background_subtractor_e_f.html#a6801b4468102b4005339b5908b44a03f',1,'BackgroundSubtractorEF']]]
+  ['setalpha_45',['setAlpha',['../class_background_subtractor_e_f.html#aa8cce88ae904d6265d5f4046857a8899',1,'BackgroundSubtractorEF']]],
+  ['setthresh2_46',['setThresh2',['../class_background_subtractor_e_f.html#aedad5e3f861d66627b849fbef41f09af',1,'BackgroundSubtractorEF']]]
 ];
