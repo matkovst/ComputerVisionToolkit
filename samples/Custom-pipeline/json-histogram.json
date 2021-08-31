@@ -1,0 +1,11 @@
+{
+    "pt1x" : 0.4,
+    "pt1y" : 0.2,
+    "pt2x" : 0.8,
+    "pt2y" : 0.2,
+    "histSize" : 20,
+    "lineBufAlpha" : 0.002,
+    "decisionThresh" : 0.5,
+    "mog2VarThresh" : 4.0,
+    "travelTime" : 5
+}

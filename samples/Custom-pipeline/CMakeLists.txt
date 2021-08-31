@@ -4,18 +4,23 @@ project( custom-pipeline )
 # Include OpenCV
 include( ${CMAKE_SOURCE_DIR}/FindOpenCV.txt )
 
-add_executable( ${PROJECT_NAME} custom-pipeline.cpp )
+MACRO(add_example NAME)
+    add_executable( ${NAME} ${NAME}.cpp )
 
-set(TARGET ${PROJECT_NAME} PROPERTY CMAKE_CXX_STANDARD 14)
-set(TARGET ${PROJECT_NAME} PROPERTY CMAKE_CXX_STANDARD_REQUIRED ON)
-#set(TARGET ${PROJECT_NAME} PROPERTY CMAKE_CXX_EXTENSIONS OFF)
+    set(TARGET ${NAME} PROPERTY CMAKE_CXX_STANDARD 14)
+    set(TARGET ${NAME} PROPERTY CMAKE_CXX_STANDARD_REQUIRED ON)
+    #set(TARGET ${NAME} PROPERTY CMAKE_CXX_EXTENSIONS OFF)
 
-target_include_directories( ${PROJECT_NAME} PUBLIC ${CVTOOLKIT_INCLUDES} )
-target_include_directories( ${PROJECT_NAME} PUBLIC ${OpenCV_INCLUDE_DIRS} )
+    target_include_directories( ${NAME} PUBLIC ${CVTOOLKIT_INCLUDES} )
+    target_include_directories( ${NAME} PUBLIC ${OpenCV_INCLUDE_DIRS} )
 
-target_link_libraries( ${PROJECT_NAME} cvtoolkit )
-target_link_libraries( ${PROJECT_NAME} ${OpenCV_LIBS} )
+    target_link_libraries( ${NAME} cvtoolkit )
+    target_link_libraries( ${NAME} ${OpenCV_LIBS} )
 
-install(TARGETS ${PROJECT_NAME}
+    install(TARGETS ${NAME}
         CONFIGURATIONS Release
         RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+ENDMACRO()
+
+add_example( custom-pipeline )
+add_example( histogram-pipeline )

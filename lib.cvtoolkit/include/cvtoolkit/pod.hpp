@@ -7,6 +7,10 @@
 namespace cvt
 {
 
+using Area = std::vector<cv::Point>;
+
+using Areas = std::vector<Area>;
+
 /** @brief NN output struct
 */
 struct InferOut

@@ -1,5 +1,5 @@
 cmake_minimum_required( VERSION 2.8 )
-project( Image-processing )
+project( Movement-detector )
 
 # Include OpenCV
 include( ${CMAKE_SOURCE_DIR}/FindOpenCV.txt )
@@ -22,6 +22,4 @@ MACRO(add_example NAME)
         RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
 ENDMACRO()
 
-add_example( laplacian )
-add_example( hsv-filter )
-add_example( histogram )
+add_example( f-diff )

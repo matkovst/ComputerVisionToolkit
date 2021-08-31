@@ -14,7 +14,9 @@ if(OpenCV_CUDA_VERSION)
 endif()
 
 # Check NVidia Hardware-Accelerated Optical Flow support
-if(OpenCV_VERSION_MAJOR GREATER_EQUAL 4 AND OpenCV_VERSION_MINOR GREATER_EQUAL 1 AND OpenCV_VERSION_PATCH GREATER_EQUAL 1)
-    add_definitions( -DHAVE_NVIDIA_HW_OPTFLOW_SUPPORT )
-    message(STATUS "Enabled NVidia Hardware-Accelerated Optical Flow support")
+if(OpenCV_CUDA_VERSION)
+    if(OpenCV_VERSION_MAJOR GREATER_EQUAL 4 AND OpenCV_VERSION_MINOR GREATER_EQUAL 1 AND OpenCV_VERSION_PATCH GREATER_EQUAL 1)
+        add_definitions( -DHAVE_NVIDIA_HW_OPTFLOW_SUPPORT )
+        message(STATUS "Enabled NVidia Hardware-Accelerated Optical Flow support")
+    endif()
 endif()

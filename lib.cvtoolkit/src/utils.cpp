@@ -121,6 +121,14 @@ void drawInferOuts( cv::Mat& frame, const InferOuts& inferOuts, cv::Scalar color
     }
 }
 
+void drawAreaMask( cv::Mat& frame, const Areas& areas, double opacity )
+{
+    cv::Mat areaMask = cv::Mat::zeros(frame.size(), frame.type());
+    cv::drawContours(areaMask, areas, -1, cv::Scalar(255, 127, 0), -1);
+    cv::addWeighted(frame, opacity, areaMask, 1.0 - opacity , 0.0, frame);
+    cv::drawContours(frame, areas, -1, cv::Scalar(255, 127, 0), 1);
+}
+
 void hstack2images( const cv::Mat& l, const cv::Mat& r, cv::Mat& out )
 {
     CV_Assert( l.size() == r.size() );

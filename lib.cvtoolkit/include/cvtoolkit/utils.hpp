@@ -8,6 +8,8 @@
 
 #include "pod.hpp"
 #include "metrics.hpp"
+#include "trigger.hpp"
+#include "json.hpp"
 
 namespace cvt
 {
@@ -25,6 +27,8 @@ void drawMotionField( const cv::Mat_<cv::Point2f>& optflow, cv::Mat& out, int st
 void drawInferOut( cv::Mat& frame, const InferOut& inferOut, cv::Scalar color = cv::Scalar(0, 0, 255), bool drawObjectMask = true, bool drawLabel = true );
 
 void drawInferOuts( cv::Mat& frame, const InferOuts& inferOuts, cv::Scalar color = cv::Scalar(0, 0, 255), bool drawObjectMask = true, bool drawLabels = true );
+
+void drawAreaMask( cv::Mat& frame, const Areas& areas, double opacity = 0.85 );
 
 void hstack2images( const cv::Mat& l, const cv::Mat& r, cv::Mat& out );
 

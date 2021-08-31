@@ -47,6 +47,8 @@ public:
 
     int frameNum() const noexcept;
 
+    std::int64_t timestamp() const noexcept;
+
     int getInputType(const std::string& input) const;
 
 private:

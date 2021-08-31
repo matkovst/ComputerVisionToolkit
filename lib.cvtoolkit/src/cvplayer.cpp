@@ -139,6 +139,11 @@ int OpenCVPlayer::frameNum() const noexcept
     return m_frameNum;
 }
 
+std::int64_t OpenCVPlayer::timestamp() const noexcept
+{
+    return 1000 * (m_frameNum / m_fps);
+}
+
 int OpenCVPlayer::getInputType(const std::string& input) const
 {
     if( input.size() == 1 && isdigit(input[0]) )
