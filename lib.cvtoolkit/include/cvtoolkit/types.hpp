@@ -11,6 +11,17 @@ using Area = std::vector<cv::Point>;
 
 using Areas = std::vector<Area>;
 
+static Area createFullScreenArea(cv::Size2d scale = cv::Size2d(1.0, 1.0))
+{
+    Area area(4);
+    area.emplace_back(0.0, 0.0);
+    area.emplace_back(scale.width, 0.0);
+    area.emplace_back(scale.width, scale.height);
+    area.emplace_back(0.0, scale.height);
+    return area;
+}
+
+
 /** @brief NN output struct
 */
 struct InferOut

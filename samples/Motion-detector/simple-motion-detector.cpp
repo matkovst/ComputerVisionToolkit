@@ -13,7 +13,7 @@
 using json = nlohmann::json;
 
 
-const static std::string WinName = "Movement detection via frame differencing";
+const static std::string WinName = "Motion detection via frame differencing";
 
 const cv::String argKeys =
         "{ help usage ?   |        | print help }"
@@ -53,16 +53,17 @@ int main(int argc, char** argv)
     /* Create GUI */
     auto metrics = std::make_shared<cvt::MetricMaster>();
     cvt::GUI gui(WinName, player, metrics);
+    const cv::Size imSize = player->frame0().size();
 
     std::cout << ">>> Input: " << input << std::endl;
-    std::cout << ">>> Resolution: " << player->frame0().size() << std::endl;
+    std::cout << ">>> Resolution: " << imSize << std::endl;
     std::cout << ">>> Record: " << std::boolalpha << record << std::endl;
     std::cout << ">>> JSON file: " << jsonPath << std::endl;
 
     /* Parse JSON */
-    int areaMovementThresh = 127;
+    int areaMotionThresh = 127;
     double decisionThresh = 0.5;
-    std::int64_t processFreqMs = 1;
+    std::int64_t processFreqMs = 100;
     cvt::Areas areas;
     if ( !jsonPath.empty() ) 
     {
@@ -73,16 +74,16 @@ int main(int argc, char** argv)
             i >> j;
             if ( !j.empty() )
             {
-                auto fdiffConfig = j["f-diff"];
+                auto fdiffConfig = j["simple-motion-detector"];
                 if ( !fdiffConfig.empty() )
                 {
-                    areaMovementThresh = ( fdiffConfig["areaMovementThresh"].empty() ) ? areaMovementThresh : 255 * static_cast<double>(fdiffConfig["areaMovementThresh"]);
+                    areaMotionThresh = ( fdiffConfig["areaMotionThresh"].empty() ) ? areaMotionThresh : static_cast<int>(255.0 * fdiffConfig["areaMotionThresh"]);
                     decisionThresh = ( fdiffConfig["decisionThresh"].empty() ) ? decisionThresh : 255 * static_cast<double>(fdiffConfig["decisionThresh"]);
                     processFreqMs = ( fdiffConfig["processFreqMs"].empty() ) ? processFreqMs : static_cast<std::int64_t>(fdiffConfig["processFreqMs"]);
 
-                    areas = cvt::parseAreas(fdiffConfig["areas"], player->frame0().size());
+                    areas = cvt::parseAreas(fdiffConfig["areas"], imSize);
                 }
-                else std::cerr << ">>> Could not find f-diff section" << std::endl;
+                else std::cerr << ">>> Could not find simple-motion-detector section" << std::endl;
             }
             else std::cerr << ">>> Could not create JSON object from file" << std::endl;
         }
@@ -90,8 +91,13 @@ int main(int argc, char** argv)
     }
     else std::cout << ">>> JSON path must not be empty" << std::endl;
 
+    if ( areas.empty() )
+    {
+        areas.emplace_back( cvt::createFullScreenArea(imSize) );
+    }
+
     /* Task-specific declarations */
-    cv::Mat areaMask = cv::Mat::zeros(player->frame0().size(), CV_8U);
+    cv::Mat areaMask = cv::Mat::zeros(imSize, CV_8U);
     cv::drawContours(areaMask, areas, -1, cv::Scalar(255), -1);
 
     /* Main loop */
@@ -149,7 +155,7 @@ int main(int argc, char** argv)
             {
                 cv::absdiff(frame, prevFrame, fdiff);
                 cv::cvtColor(fdiff, fdiff, cv::COLOR_BGR2GRAY);
-                cv::threshold(fdiff, fdiff, areaMovementThresh, 255, cv::THRESH_BINARY);
+                cv::threshold(fdiff, fdiff, areaMotionThresh, 255, cv::THRESH_BINARY);
 
                 /* Mask frame */
                 cv::bitwise_and(fdiff, areaMask, fdiff);
@@ -160,7 +166,7 @@ int main(int argc, char** argv)
 
         /* Display info */
         cv::Mat frameOut = ( processNow ) ? prevFrame.clone() : frame.clone();
-        cvt::drawAreaMask(frameOut, areas, 0.8);
+        cvt::drawAreaMaskNeg(frameOut, areas, 0.8);
         if ( processNow ) cv::cvtColor(fdiff, fdiff, cv::COLOR_GRAY2BGR);
         cvt::hstack2images(frameOut, fdiff, out);
         if ( record )

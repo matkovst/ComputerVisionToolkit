@@ -6,7 +6,7 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 
-#include "pod.hpp"
+#include "types.hpp"
 #include "metrics.hpp"
 
 namespace cvt

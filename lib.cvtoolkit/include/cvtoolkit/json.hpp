@@ -6,12 +6,12 @@
 #include <json.hpp>
 using json = nlohmann::json;
 
-#include "pod.hpp"
+#include "types.hpp"
 
 namespace cvt
 {
 
-static Areas parseAreas(json jAreas, cv::Size scale = cv::Size(1, 1))
+static Areas parseAreas(json jAreas, cv::Size2d scale = cv::Size2d(1.0, 1.0))
 {
     if ( jAreas.empty() ) return Areas();
 

@@ -17,6 +17,6 @@ add_subdirectory( Background-subtraction )
 
 add_subdirectory( Image-processing )
 
-add_subdirectory( Movement-detector )
+add_subdirectory( Motion-detector )
 
 add_subdirectory( Custom-pipeline )

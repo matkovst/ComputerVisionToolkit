@@ -3,6 +3,40 @@
 namespace cvt
 {
 
+int sqArea( Area area )
+{
+    int xMin = std::numeric_limits<int>::max();
+    int yMin = std::numeric_limits<int>::max();
+    int xMax = 0;
+    int yMax = 0;
+    for ( const auto& point : area )
+    {
+        if ( point.x > xMax ) xMax = point.x;
+        if ( point.x < xMin ) xMin = point.x;
+        if ( point.y > yMax ) yMax = point.y;
+        if ( point.y < yMin ) yMin = point.y;
+    }
+
+    const int w = xMax - xMin;
+    const int h = yMax - yMin;
+    cv::Mat rect = cv::Mat::zeros(h, w, CV_8U);
+    Areas areas{area};
+    cv::drawContours(rect, areas, -1, cv::Scalar(255), -1);
+    const double sum = cv::sum(rect)[0] / 255.0;
+
+    return static_cast<int>(sum);
+}
+
+int totalSqArea( Areas areas )
+{
+    int totalArea = 0;
+    for (const auto& area : areas)
+    {
+        totalArea += sqArea(area);
+    }
+    return totalArea;
+}
+
 bool vectorOk(cv::Point2f u) 
 {
     return (!cvIsNaN(u.x) && fabs(u.x) < 1e9) && (!cvIsNaN(u.y) && fabs(u.y) < 1e9);
@@ -123,10 +157,26 @@ void drawInferOuts( cv::Mat& frame, const InferOuts& inferOuts, cv::Scalar color
 
 void drawAreaMask( cv::Mat& frame, const Areas& areas, double opacity )
 {
+    const int frameArea = frame.size().area();
+    const int areasArea = totalSqArea(areas);
+    if ( frameArea == areasArea ) return; // if so, does not need to draw red lines in the corners of frame
+
     cv::Mat areaMask = cv::Mat::zeros(frame.size(), frame.type());
     cv::drawContours(areaMask, areas, -1, cv::Scalar(255, 127, 0), -1);
     cv::addWeighted(frame, opacity, areaMask, 1.0 - opacity , 0.0, frame);
     cv::drawContours(frame, areas, -1, cv::Scalar(255, 127, 0), 1);
+}
+
+void drawAreaMaskNeg( cv::Mat& frame, const Areas& areas, double opacity )
+{
+    const int frameArea = frame.size().area();
+    const int areasArea = totalSqArea(areas);
+    if ( frameArea == areasArea ) return; // if so, does not need to draw red lines in the corners of frame
+
+    cv::Mat areaMask = cv::Mat(frame.size(), frame.type(), cv::Scalar(0, 0, 255));
+    cv::drawContours(areaMask, areas, -1, cv::Scalar(0, 0, 0), -1);
+    cv::addWeighted(frame, opacity, areaMask, 1.0 - opacity , 0.0, frame);
+    cv::drawContours(frame, areas, -1, cv::Scalar(0, 0, 255), 1);
 }
 
 void hstack2images( const cv::Mat& l, const cv::Mat& r, cv::Mat& out )

@@ -22,4 +22,4 @@ MACRO(add_example NAME)
         RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
 ENDMACRO()
 
-add_example( f-diff )
+add_example( simple-motion-detector )
