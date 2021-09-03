@@ -23,3 +23,4 @@ MACRO(add_example NAME)
 ENDMACRO()
 
 add_example( simple-motion-detector )
+add_example( optflow-motion-detector )

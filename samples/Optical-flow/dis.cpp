@@ -62,7 +62,7 @@ int main(int argc, char** argv)
     disOpt = cv::optflow::createOptFlow_DIS(cv::optflow::DISOpticalFlow::PRESET_ULTRAFAST);
 #else
     cv::Ptr<cv::DISOpticalFlow> disOpt;
-    disOpt = cv::DISOpticalFlow::create(0);
+    disOpt = cv::DISOpticalFlow::create(cv::DISOpticalFlow::PRESET_ULTRAFAST);
 #endif
     cv::Mat gray, prevGray;
 
