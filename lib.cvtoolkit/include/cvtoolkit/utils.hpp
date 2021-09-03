@@ -30,6 +30,7 @@ int totalSqArea( Areas areas );
  */
 bool vectorOk( cv::Point2f u );
 
+
 void drawMotionField( const cv::Mat_<cv::Point2f>& optflow, cv::Mat& out, int stride );
 
 void drawInferOut( cv::Mat& frame, const InferOut& inferOut, cv::Scalar color = cv::Scalar(0, 0, 255), bool drawObjectMask = true, bool drawLabel = true );
@@ -40,8 +41,11 @@ void drawAreaMask( cv::Mat& frame, const Areas& areas, double opacity = 0.85 );
 
 void drawAreaMaskNeg( cv::Mat& frame, const Areas& areas, double opacity = 0.85 );
 
+
 void hstack2images( const cv::Mat& l, const cv::Mat& r, cv::Mat& out );
 
 void stack4images( const cv::Mat& lt, const cv::Mat& rt, const cv::Mat& lb, const cv::Mat& rb, cv::Mat& out );
+
+bool filterByTimestamp(std::int64_t timestamp, std::int64_t processFreq);
 
 }

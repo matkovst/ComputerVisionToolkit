@@ -19,7 +19,6 @@ using json = nlohmann::json;
 
 
 const static std::string WinName = "Motion detection via optical flow";
-const static std::string sampleName = "optflow-motion-detector";
 
 const cv::String argKeys =
         "{ help usage ?   |        | print help }"
@@ -69,29 +68,107 @@ private:
 };
 
 
-bool processNow(std::int64_t timestamp, std::int64_t processFreq)
+struct OptflowMotionDetector_InputParams
 {
-    static std::int64_t lastFrameMs = -1;
+    cv::Size imSize;
+    double fps;
+    std::string configPath;
+};
 
-    if ( lastFrameMs == -1 )
+
+class OptflowMotionDetector final
+{
+public:
+
+    const std::string Name { "optflow-motion-detector" };
+
+    OptflowMotionDetector(const OptflowMotionDetector_InputParams& iParams)
+        : m_imSize(iParams.imSize)
+        , m_fps(iParams.fps)
+        , m_AreaMask(cv::Mat::zeros(iParams.imSize, CV_8U))
     {
-        lastFrameMs = timestamp;
-    }
-    else
-    {
-        if ( processFreq > 0 )
+        parseJsonConfig(iParams.configPath);
+        
+        /* Handle with areas */
+        if ( m_areas.empty() )
         {
-            std::int64_t elapsed = timestamp - lastFrameMs;
-            if ( elapsed < processFreq )
-            {
-                return false;
-            }
-            lastFrameMs = timestamp - (timestamp % processFreq);
+            m_areas.emplace_back( cvt::createFullScreenArea(m_imSize) );
         }
+        cv::drawContours(m_AreaMask, m_areas, -1, cv::Scalar(255), -1);
+
+        /* Handle with optical flow */
+        OpticalFlowHelper oflowHelper;
     }
 
-    return true;
-}
+    ~OptflowMotionDetector() = default;
+
+    void process(cv::InputArray in, std::int64_t timestamp)
+    {
+        if ( cvt::filterByTimestamp(timestamp, m_processFreqMs) )
+        {
+            return;
+        }
+
+        m_oflowHelper.calc(in.getMat(), m_Flow);
+    }
+
+    const cv::Mat& flow() const noexcept
+    {
+        return m_Flow;
+    }
+
+    const cvt::Areas& areas() const noexcept
+    {
+        return m_areas;
+    }
+
+private:
+    cv::Size m_imSize { -1, -1 };
+    double m_fps { -1 };
+    std::int64_t m_processFreqMs { 100 };
+    cvt::Areas m_areas;
+    cv::Mat m_AreaMask;
+    OpticalFlowHelper m_oflowHelper;
+    cv::Mat m_Flow;
+
+    void parseJsonConfig(const std::string& configPath)
+    {
+        if ( configPath.empty() )
+        {
+            std::cout << ">>> JSON path must not be empty" << std::endl;
+            return;
+        }
+
+        std::ifstream i(configPath.c_str());
+        if ( !i.good() )
+        {
+            std::cout << ">>> Could not read JSON file. Possibly file does not exist" << std::endl;
+            return;
+        }
+
+        json j;
+        i >> j;
+        if ( j.empty() )
+        {
+            std::cerr << ">>> Could not create JSON object from file" << std::endl;
+            return;
+        }
+                    
+        auto fdiffConfig = j[Name];
+        if ( fdiffConfig.empty() )
+        {
+            std::cerr << ">>> Could not find " << Name << " section" << std::endl;
+            return;
+        }
+        
+        if ( !fdiffConfig["processFreqMs"].empty() )
+        {
+            m_processFreqMs = static_cast<std::int64_t>(fdiffConfig["processFreqMs"]);
+        }
+
+        m_areas = cvt::parseAreas(fdiffConfig["areas"], m_imSize);
+    }
+};
 
 
 int main(int argc, char** argv)
@@ -124,58 +201,20 @@ int main(int argc, char** argv)
     auto metrics = std::make_shared<cvt::MetricMaster>();
     cvt::GUI gui(WinName, player, metrics);
     const cv::Size imSize = player->frame0().size();
+    const double fps = player->fps();
 
     std::cout << ">>> Input: " << input << std::endl;
     std::cout << ">>> Resolution: " << imSize << std::endl;
     std::cout << ">>> Record: " << std::boolalpha << record << std::endl;
     std::cout << ">>> JSON file: " << jsonPath << std::endl;
 
-    /* Parse JSON */
-    int areaMotionThresh = 127;
-    double decisionThresh = 0.5;
-    std::int64_t processFreqMs = 1;
-    cvt::Areas areas;
-    if ( !jsonPath.empty() ) 
-    {
-        std::ifstream i(jsonPath.c_str());
-        if ( i.good() )
-        {
-            json j;
-            i >> j;
-            if ( !j.empty() )
-            {
-                auto fdiffConfig = j[sampleName];
-                if ( !fdiffConfig.empty() )
-                {
-                    areaMotionThresh = ( fdiffConfig["areaMotionThresh"].empty() ) ? areaMotionThresh : static_cast<int>(255.0 * fdiffConfig["areaMotionThresh"]);
-                    decisionThresh = ( fdiffConfig["decisionThresh"].empty() ) ? decisionThresh : 255 * static_cast<double>(fdiffConfig["decisionThresh"]);
-                    processFreqMs = ( fdiffConfig["processFreqMs"].empty() ) ? processFreqMs : static_cast<std::int64_t>(fdiffConfig["processFreqMs"]);
-
-                    areas = cvt::parseAreas(fdiffConfig["areas"], imSize);
-                }
-                else std::cerr << ">>> Could not find " << sampleName << " section" << std::endl;
-            }
-            else std::cerr << ">>> Could not create JSON object from file" << std::endl;
-        }
-        else std::cout << ">>> Could not read JSON file. Possibly file does not exist" << std::endl;
-    }
-    else std::cout << ">>> JSON path must not be empty" << std::endl;
-
-    if ( areas.empty() )
-    {
-        areas.emplace_back( cvt::createFullScreenArea(imSize) );
-    }
-
     /* Task-specific declarations */
-    OpticalFlowHelper oflowHelper;
-    cv::Mat areaMask = cv::Mat::zeros(imSize, CV_8U);
-    cv::drawContours(areaMask, areas, -1, cv::Scalar(255), -1);
+    const OptflowMotionDetector_InputParams iParams { imSize, fps, jsonPath };
+    OptflowMotionDetector motionDetector(iParams);
 
     /* Main loop */
     bool loop = true;
     cv::Mat frame, gray, out;
-    cv::Mat maskedFrame;
-    std::int64_t lastFrameMs = -1;
     while ( loop )
     {
         /* Controls */
@@ -194,20 +233,18 @@ int main(int argc, char** argv)
         }
 
         /* Computer vision magic */
-        cv::Mat optFlow = cv::Mat::zeros(imSize, CV_32F);
-        if ( processNow(player->timestamp(), processFreqMs) )
         {
             auto m = metrics->measure();
 
             cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
 
-            oflowHelper.calc(gray, optFlow);
+            motionDetector.process(gray, player->timestamp());
         }
 
         /* Display info */
         out = frame.clone();
-        cvt::drawMotionField(optFlow, out, 16);
-        cvt::drawAreaMaskNeg(out, areas, 0.8);
+        cvt::drawMotionField(motionDetector.flow(), out, 16);
+        cvt::drawAreaMaskNeg(out, motionDetector.areas(), 0.8);
         if ( record )
         {
             *player << out;
