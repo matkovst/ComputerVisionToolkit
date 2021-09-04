@@ -12,8 +12,7 @@
 
 #include "metrics.hpp"
 
-static volatile bool stopDetectorThreads = false;
-static int MaxItemsInQueue = 100;
+static const int MaxItemsInQueue = 100;
 
 template<typename T>
 class ConcurrentQueue final
@@ -171,68 +170,30 @@ public:
 
     ConcurrentQueue<Detector::InputData> iDataQueue;
 
-    DetectorThreadManager(const std::shared_ptr<Detector>& detector, unsigned int threadID = 0)
-        : m_detector(detector)
-        , detectorThreadID(threadID)
-        , m_metrics(std::make_shared<cvt::MetricMaster>())
-    {
-    }
+    DetectorThreadManager(const std::shared_ptr<Detector>& detector, unsigned int threadID = 0);
 
     DetectorThreadManager(const DetectorThreadManager&) = delete;
 
     DetectorThreadManager& operator=(const DetectorThreadManager&) = delete;
 
-    DetectorThreadManager(DetectorThreadManager&& other)
-        : detectorThread(std::move(other.detectorThread))
-        , detectorThreadID(other.detectorThreadID)
-        , m_detector(std::move(other.m_detector))
-    {}
+    DetectorThreadManager(DetectorThreadManager&& other);
 
-    DetectorThreadManager& operator=(DetectorThreadManager&& other)
-    {
-        detectorThread = std::move(other.detectorThread);
-        detectorThreadID = other.detectorThreadID;
-        m_detector = std::move(other.m_detector);
-
-        return *this;
-    }
+    DetectorThreadManager& operator=(DetectorThreadManager&& other);
     
     ~DetectorThreadManager() = default;
 
-    void run()
-    {
-        auto detectorThreadFunc = std::bind(&DetectorThreadManager::detectorThreadLoop, this);
-        detectorThread = std::thread(std::move(detectorThreadFunc));
-    }
+    void run();
 
-    void detectorThreadLoop()
-    {
-        std::cout << ">>> Detector thread " << detectorThreadID << " started" << std::endl;
-        while ( !stopDetectorThreads )
-        {
-            auto iDataPtr = iDataQueue.pop1(1000);
-            if ( !iDataPtr || !iDataPtr->retval )
-            {
-                continue;
-            }
+    void detectorThreadLoop();
 
-            auto m = m_metrics->measure();
+    void finish();
 
-            Detector::InputData iData = *iDataPtr;
-            Detector::OutputData oData;
-            m_detector->process(std::move(iData), oData);
-        }
+    bool isRunning() const noexcept;
 
-        std::cout << ">>> Detector thread " << detectorThreadID << " finished" << std::endl;
-        std::cout << ">>> Detector thread " << detectorThreadID << " metrics: " << m_metrics->summary() << std::endl;
-    }
-
-    const std::shared_ptr<Detector> detector() const noexcept
-    {
-        return m_detector;
-    }
+    const std::shared_ptr<Detector> detector() const noexcept;
 
 private:
     std::shared_ptr<Detector> m_detector;
     std::shared_ptr<cvt::MetricMaster> m_metrics;
+    bool m_stopDetectorThreads { false };
 };

@@ -20,8 +20,6 @@
 using json = nlohmann::json;
 
 
-static bool loop = true;
-
 const static std::string WinName = "Motion detection via optical flow";
 
 const cv::String argKeys =
@@ -31,6 +29,10 @@ const cv::String argKeys =
         "{ record e       |  false | do record }"
         "{ @json j        |        | path to json }"
         ;
+
+static bool loop = true;
+
+std::unique_ptr<DetectorThreadManager> detectorThread;
 
 
 class OptflowMotionDetector final : public Detector
@@ -180,7 +182,10 @@ private:
 void signalHandler(int code) 
 {
     loop = false;
-    stopDetectorThreads = true;
+    if ( detectorThread )
+    {
+        detectorThread->finish();
+    }
 }
 
 
@@ -226,10 +231,10 @@ int main(int argc, char** argv)
     /* Task-specific declarations */
     Detector::InitializeData initData { imSize, fps, jsonPath };
     std::shared_ptr<OptflowMotionDetector> motionDetector = std::make_shared<OptflowMotionDetector>(initData);
-    DetectorThreadManager detectorThread(motionDetector, 0);
+    detectorThread = std::make_unique<DetectorThreadManager>(motionDetector);
 
     /* Detector loop */
-    detectorThread.run();
+    detectorThread->run();
 
     /* Main loop */
     cv::Mat frame, out;
@@ -243,7 +248,10 @@ int main(int argc, char** argv)
         if ( action == gui.CLOSE ) 
         {
             loop = false;
-            stopDetectorThreads = true;
+            if ( detectorThread->isRunning() )
+            {
+                detectorThread->finish();
+            }
         }
 
         /* Capturing */
@@ -255,9 +263,9 @@ int main(int argc, char** argv)
 
         /* Computer vision magic */
         {
-            if ( detectorThread.iDataQueue.size() >= MaxItemsInQueue )
+            if ( detectorThread->iDataQueue.size() >= MaxItemsInQueue )
             {
-                detectorThread.iDataQueue.clear();
+                detectorThread->iDataQueue.clear();
             }
 
             Detector::InputData iData
@@ -268,7 +276,7 @@ int main(int argc, char** argv)
                 static_cast<unsigned int>(frame.step.p[0]),
                 player->timestamp()
             };
-            detectorThread.iDataQueue.push(std::move(iData));
+            detectorThread->iDataQueue.push(std::move(iData));
         }
 
         /* Display info */
@@ -286,8 +294,11 @@ int main(int argc, char** argv)
         gui.imshow(out, record);
     }
 
-    stopDetectorThreads = true;
-    detectorThread.detectorThread.join();
+    if ( detectorThread->isRunning() )
+    {
+        detectorThread->finish();
+    }
+    detectorThread->detectorThread.join();
     
     std::cout << ">>> Main thread metrics (with waitKey): " << metrics->summary() << std::endl;
     std::cout << ">>> Program successfully finished" << std::endl;

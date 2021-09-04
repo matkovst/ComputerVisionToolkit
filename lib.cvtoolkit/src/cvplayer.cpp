@@ -71,7 +71,7 @@ void OpenCVPlayer::read(cv::Mat& out)
     m_capture >> out;
     ++m_frameNum;
     
-    if ( m_doResize )
+    if ( m_doResize && !out.empty() )
     {
         cv::resize(out, out, cv::Size(0, 0), m_scaleFactor, m_scaleFactor);
     }
