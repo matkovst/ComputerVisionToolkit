@@ -223,28 +223,4 @@ void stack4images( const cv::Mat& lt, const cv::Mat& rt, const cv::Mat& lb, cons
 	Bottom.copyTo(MatSub);
 }
 
-bool filterByTimestamp(std::int64_t timestamp, std::int64_t processFreq)
-{
-    static std::int64_t lastFrameMs = -1;
-
-    if ( lastFrameMs == -1 )
-    {
-        lastFrameMs = timestamp;
-    }
-    else
-    {
-        if ( processFreq > 0 )
-        {
-            std::int64_t elapsed = timestamp - lastFrameMs;
-            if ( elapsed < processFreq )
-            {
-                return false;
-            }
-            lastFrameMs = timestamp - (timestamp % processFreq);
-        }
-    }
-
-    return true;
-}
-
 }

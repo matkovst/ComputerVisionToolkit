@@ -1,3 +1,4 @@
+#include <signal.h>
 #include <iostream>
 #include <fstream>
 
@@ -13,10 +14,13 @@
 #include <cvtoolkit/cvplayer.hpp>
 #include <cvtoolkit/cvgui.hpp>
 #include <cvtoolkit/utils.hpp>
+#include <cvtoolkit/detector_manager.hpp>
 
 #include <json.hpp>
 using json = nlohmann::json;
 
+
+static bool loop = true;
 
 const static std::string WinName = "Motion detection via optical flow";
 
@@ -29,65 +33,18 @@ const cv::String argKeys =
         ;
 
 
-struct OpticalFlowHelper
-{
-    OpticalFlowHelper()
-    {
-#if CV_MAJOR_VERSION == 3
-        m_disOpt = cv::optflow::createOptFlow_DIS(cv::optflow::DISOpticalFlow::PRESET_ULTRAFAST);
-#else
-        m_disOpt = cv::DISOpticalFlow::create(cv::DISOpticalFlow::PRESET_ULTRAFAST);
-#endif
-    }
-
-    void calc(const cv::Mat& frame, cv::Mat& out)
-    {
-        if ( m_prevGray.empty() )
-        {
-            m_prevGray = frame.clone();
-            if ( out.empty() )
-            {
-                out.create(frame.size(), CV_32F);
-            }
-            return;
-        }
-        
-        m_disOpt->calc(frame, m_prevGray, out);
-
-        m_prevGray = frame.clone();
-    }
-
-private:
-    cv::Mat m_prevGray;
-    
-#if CV_MAJOR_VERSION == 3
-    cv::Ptr<cv::optflow::DISOpticalFlow> m_disOpt;
-#else
-    cv::Ptr<cv::DISOpticalFlow> m_disOpt;
-#endif
-};
-
-
-struct OptflowMotionDetector_InputParams
-{
-    cv::Size imSize;
-    double fps;
-    std::string configPath;
-};
-
-
-class OptflowMotionDetector final
+class OptflowMotionDetector final : public Detector
 {
 public:
 
     const std::string Name { "optflow-motion-detector" };
 
-    OptflowMotionDetector(const OptflowMotionDetector_InputParams& iParams)
-        : m_imSize(iParams.imSize)
-        , m_fps(iParams.fps)
-        , m_AreaMask(cv::Mat::zeros(iParams.imSize, CV_8U))
+    OptflowMotionDetector(const Detector::InitializeData& iData)
+        : m_imSize(iData.imSize)
+        , m_fps(iData.fps)
+        , m_AreaMask(cv::Mat::zeros(iData.imSize, CV_8U))
     {
-        parseJsonConfig(iParams.configPath);
+        parseJsonConfig(iData.configPath);
         
         /* Handle with areas */
         if ( m_areas.empty() )
@@ -97,19 +54,38 @@ public:
         cv::drawContours(m_AreaMask, m_areas, -1, cv::Scalar(255), -1);
 
         /* Handle with optical flow */
-        OpticalFlowHelper oflowHelper;
+#if CV_MAJOR_VERSION == 3
+        m_disOpt = cv::optflow::createOptFlow_DIS(cv::optflow::DISOpticalFlow::PRESET_ULTRAFAST);
+#else
+        m_disOpt = cv::DISOpticalFlow::create(cv::DISOpticalFlow::PRESET_ULTRAFAST);
+#endif
     }
 
     ~OptflowMotionDetector() = default;
 
-    void process(cv::InputArray in, std::int64_t timestamp)
+    void process(const Detector::InputData& in, Detector::OutputData& out) override
     {
-        if ( cvt::filterByTimestamp(timestamp, m_processFreqMs) )
+        if ( filterByTimestamp(in.timestamp) )
         {
             return;
         }
 
-        m_oflowHelper.calc(in.getMat(), m_Flow);
+        const cv::Mat frame = cv::Mat(m_imSize, in.imType, const_cast<unsigned char *>(in.imData), in.imStep);
+        cv::cvtColor(frame, m_Gray, cv::COLOR_BGR2GRAY);
+        
+        if ( m_PrevGray.empty() )
+        {
+            m_PrevGray = m_Gray.clone();
+            if ( m_Flow.empty() )
+            {
+                m_Flow.create(m_Gray.size(), CV_32F);
+            }
+            return;
+        }
+        
+        m_disOpt->calc(m_Gray, m_PrevGray, m_Flow);
+
+        cv::swap(m_Gray, m_PrevGray);
     }
 
     const cv::Mat& flow() const noexcept
@@ -125,11 +101,18 @@ public:
 private:
     cv::Size m_imSize { -1, -1 };
     double m_fps { -1 };
-    std::int64_t m_processFreqMs { 100 };
+    std::int64_t m_processFreqMs { 1 };
+    std::int64_t m_lastProcessedFrameMs { -1 };
     cvt::Areas m_areas;
     cv::Mat m_AreaMask;
-    OpticalFlowHelper m_oflowHelper;
+    cv::Mat m_Gray;
+    cv::Mat m_PrevGray;
     cv::Mat m_Flow;
+#if CV_MAJOR_VERSION == 3
+    cv::Ptr<cv::optflow::DISOpticalFlow> m_disOpt;
+#else
+    cv::Ptr<cv::DISOpticalFlow> m_disOpt;
+#endif
 
     void parseJsonConfig(const std::string& configPath)
     {
@@ -168,11 +151,43 @@ private:
 
         m_areas = cvt::parseAreas(fdiffConfig["areas"], m_imSize);
     }
+
+    bool filterByTimestamp(std::int64_t timestamp)
+    {
+        if ( m_lastProcessedFrameMs == -1 )
+        {
+            m_lastProcessedFrameMs = timestamp;
+        }
+        else
+        {
+            if ( m_processFreqMs > 0 )
+            {
+                std::int64_t elapsed = timestamp - m_lastProcessedFrameMs;
+                if ( elapsed < m_processFreqMs )
+                {
+                    return true;
+                }
+                m_lastProcessedFrameMs = timestamp - (timestamp % m_processFreqMs);
+            }
+        }
+
+        return false;
+    }
+
 };
+
+
+void signalHandler(int code) 
+{
+    loop = false;
+    stopDetectorThreads = true;
+}
 
 
 int main(int argc, char** argv)
 {
+    signal(SIGINT, signalHandler); // Handle Ctrl+C exit
+
     /* Parse command-line args */
     cv::CommandLineParser parser(argc, argv, argKeys);
     parser.about(WinName);
@@ -209,20 +224,26 @@ int main(int argc, char** argv)
     std::cout << ">>> JSON file: " << jsonPath << std::endl;
 
     /* Task-specific declarations */
-    const OptflowMotionDetector_InputParams iParams { imSize, fps, jsonPath };
-    OptflowMotionDetector motionDetector(iParams);
+    Detector::InitializeData initData { imSize, fps, jsonPath };
+    std::shared_ptr<OptflowMotionDetector> motionDetector = std::make_shared<OptflowMotionDetector>(initData);
+    DetectorThreadManager detectorThread(motionDetector, 0);
+
+    /* Detector loop */
+    detectorThread.run();
 
     /* Main loop */
-    bool loop = true;
-    cv::Mat frame, gray, out;
+    cv::Mat frame, out;
     while ( loop )
     {
+        auto m = metrics->measure();
+
         /* Controls */
         int action = gui.listenKeyboard();
         if ( action == gui.CONTINUE ) continue;
         if ( action == gui.CLOSE ) 
         {
             loop = false;
+            stopDetectorThreads = true;
         }
 
         /* Capturing */
@@ -234,17 +255,26 @@ int main(int argc, char** argv)
 
         /* Computer vision magic */
         {
-            auto m = metrics->measure();
+            if ( detectorThread.iDataQueue.size() >= MaxItemsInQueue )
+            {
+                detectorThread.iDataQueue.clear();
+            }
 
-            cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
-
-            motionDetector.process(gray, player->timestamp());
+            Detector::InputData iData
+            {
+                !frame.empty(),
+                frame.data,
+                static_cast<unsigned int>(frame.type()),
+                static_cast<unsigned int>(frame.step.p[0]),
+                player->timestamp()
+            };
+            detectorThread.iDataQueue.push(std::move(iData));
         }
 
         /* Display info */
         out = frame.clone();
-        cvt::drawMotionField(motionDetector.flow(), out, 16);
-        cvt::drawAreaMaskNeg(out, motionDetector.areas(), 0.8);
+        cvt::drawMotionField(motionDetector->flow(), out, 16);
+        cvt::drawAreaMaskNeg(out, motionDetector->areas(), 0.8);
         if ( record )
         {
             *player << out;
@@ -255,8 +285,11 @@ int main(int argc, char** argv)
         }
         gui.imshow(out, record);
     }
+
+    stopDetectorThreads = true;
+    detectorThread.detectorThread.join();
     
-    std::cout << ">>> " << metrics->summary() << std::endl;
+    std::cout << ">>> Main thread metrics (with waitKey): " << metrics->summary() << std::endl;
     std::cout << ">>> Program successfully finished" << std::endl;
     return 0;
 }
