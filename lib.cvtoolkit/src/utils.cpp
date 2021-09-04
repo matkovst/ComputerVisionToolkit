@@ -19,9 +19,10 @@ int sqArea( Area area )
 
     const int w = xMax - xMin;
     const int h = yMax - yMin;
+    const cv::Point offset(-xMin, -yMin);
     cv::Mat rect = cv::Mat::zeros(h, w, CV_8U);
     Areas areas{area};
-    cv::drawContours(rect, areas, -1, cv::Scalar(255), -1);
+    cv::drawContours(rect, areas, -1, cv::Scalar(255), -1, 8, cv::noArray(), 2147483647, offset);
     const double sum = cv::sum(rect)[0] / 255.0;
 
     return static_cast<int>(sum);
@@ -37,7 +38,7 @@ int totalSqArea( Areas areas )
     return totalArea;
 }
 
-bool vectorOk(cv::Point2f u) 
+bool isFlowCorrect(cv::Point2f u) 
 {
     return (!cvIsNaN(u.x) && fabs(u.x) < 1e9) && (!cvIsNaN(u.y) && fabs(u.y) < 1e9);
 }
@@ -54,7 +55,7 @@ void drawMotionField(const cv::Mat_<cv::Point2f>& optflow, cv::Mat& out, int str
         for ( int x = 0; x < optflow.cols; x += stride ) 
         {
             cv::Point2f uu = -optflow(y, x);
-            if ( !vectorOk(uu) )
+            if ( !isFlowCorrect(uu) )
             {
                 continue;
             }

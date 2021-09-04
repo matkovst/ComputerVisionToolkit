@@ -45,6 +45,8 @@ void DetectorThreadManager::detectorThreadLoop()
         Detector::InputData iData = *iDataPtr;
         Detector::OutputData oData;
         m_detector->process(std::move(iData), oData);
+        
+        if (oData.event) std::cout << oData.eventDescr << std::endl;
     }
 
     std::cout << ">>> Detector thread " << detectorThreadID << " finished" << std::endl;

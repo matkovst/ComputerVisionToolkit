@@ -14,8 +14,8 @@ namespace cvt
 
 /*! @brief The class implements event trigger logic.
 
-    The initial trigger state is OFF. After getting onCount-number values it switches to ABOUT_TO_ON and right after that to ON.
-    If offCount-number values have not been got, it turns to ABOUT_TO_OFF and right after that to OFF.
+    The initial trigger state is OFF. After getting countBeforeOn-number values it switches to ABOUT_TO_ON and right after that to ON.
+    If countBeforeOff-number values have not been got, it turns to ABOUT_TO_OFF and right after that to OFF.
 
                   ______ON______
                 /               \
@@ -34,13 +34,21 @@ public:
         ON              = 2
     };
 
-    EventTrigger(int onCount = 1, int offCount = 1)
-        : m_onCount(onCount)
-        , m_offCount(offCount)
+    EventTrigger(int countBeforeOn = 1, int countBeforeOff = 1)
     {
+        m_countBeforeOn = (countBeforeOn > 0) ? countBeforeOn : 1;
+        m_countBeforeOff = (countBeforeOff > 0) ? countBeforeOff : 1;
     }
 
     ~EventTrigger() = default;
+
+    void init(int countBeforeOn = 1, int countBeforeOff = 1)
+    {
+        m_countBeforeOn = (countBeforeOn > 0) ? countBeforeOn : 1;
+        m_countBeforeOff = (countBeforeOff > 0) ? countBeforeOff : 1;
+        m_counter = 0;
+        m_state = false;
+    }
 
     /*! @brief Updates trigger.
 
@@ -61,7 +69,7 @@ public:
             else
             {
                 triggerState = State::ABOUT_TO_ON;
-                m_counter += m_offCount;
+                m_counter += m_countBeforeOff;
             }
         }
         else
@@ -90,8 +98,8 @@ public:
     }
 
 private:
-    int m_onCount { 1 };
-    int m_offCount { 1 };
+    int m_countBeforeOn { 1 };
+    int m_countBeforeOff { 1 };
     int m_counter { 0 };
     bool m_state { false };
 
@@ -99,8 +107,8 @@ private:
     {
         m_counter += v ? v : -1;
         if (m_counter < 0) m_counter = 0;
-        if (m_counter > m_onCount + m_offCount) m_counter = (m_onCount + m_offCount);
-        return (m_counter >= m_onCount);
+        if (m_counter > m_countBeforeOn + m_countBeforeOff) m_counter = (m_countBeforeOn + m_countBeforeOff);
+        return (m_counter >= m_countBeforeOn);
     }
 
 };

@@ -44,7 +44,8 @@ public:
     OptflowMotionDetector(const Detector::InitializeData& iData)
         : m_imSize(iData.imSize)
         , m_fps(iData.fps)
-        , m_AreaMask(cv::Mat::zeros(iData.imSize, CV_8U))
+        , m_FlowAreaMask(cv::Mat::zeros(iData.imSize, CV_32FC2))
+        , m_Motion(cv::Mat::zeros(iData.imSize, CV_8U))
     {
         parseJsonConfig(iData.configPath);
         
@@ -53,7 +54,9 @@ public:
         {
             m_areas.emplace_back( cvt::createFullScreenArea(m_imSize) );
         }
-        cv::drawContours(m_AreaMask, m_areas, -1, cv::Scalar(255), -1);
+        cv::drawContours(m_FlowAreaMask, m_areas, -1, cv::Scalar::all(255), -1);
+        const int totalArea = cvt::totalSqArea(m_areas);
+        m_maxMotion = static_cast<double>(255 * totalArea);
 
         /* Handle with optical flow */
 #if CV_MAJOR_VERSION == 3
@@ -61,6 +64,11 @@ public:
 #else
         m_disOpt = cv::DISOpticalFlow::create(cv::DISOpticalFlow::PRESET_ULTRAFAST);
 #endif
+
+        /* Handle with event trigger */
+        int holdoutFrames = static_cast<int>(m_eventHoldoutMs * m_fps / 1000.0);
+        int holddownFrames = static_cast<int>(m_eventHolddownMs * m_fps / 1000.0);
+        m_eventTrigger.init(holdoutFrames, holddownFrames);
     }
 
     ~OptflowMotionDetector() = default;
@@ -85,7 +93,34 @@ public:
             return;
         }
         
+        /* 1. Calculate flow */
         m_disOpt->calc(m_Gray, m_PrevGray, m_Flow);
+        cv::bitwise_and(m_Flow, m_FlowAreaMask, m_Flow);
+
+        /* 2. Get magnitude */
+        cv::split(m_Flow, m_FlowUV);
+        cv::multiply(m_FlowUV[1], -1, m_FlowUV[1]);
+        cv::cartToPolar(m_FlowUV[0], m_FlowUV[1], m_FlowMagn, m_FlowAngle, true);
+
+        /* 3. Threshold */
+        cv::threshold(m_FlowMagn, m_Motion, m_flowThresh, 255, cv::THRESH_BINARY);
+
+        // cv::Mat m_Motion2;
+        // motionMask_experimental(m_Flow, m_Motion2);
+
+        /* 4. Make decision */
+        double totalMotion = cv::sum(m_Motion)[0] / m_maxMotion;
+        int event = m_eventTrigger( (totalMotion >= m_decisionThresh) );
+        if ( event == cvt::EventTrigger::State::ABOUT_TO_ON )
+        {
+            out.event = true;
+            out.eventTimestamp = in.timestamp;
+            out.eventDescr = "Detected motion in area";
+        }
+        else
+        {
+            out.event = false;
+        }
 
         cv::swap(m_Gray, m_PrevGray);
     }
@@ -95,26 +130,42 @@ public:
         return m_Flow;
     }
 
+    const cv::Mat& motion() const noexcept
+    {
+        return m_Motion;
+    }
+
     const cvt::Areas& areas() const noexcept
     {
         return m_areas;
     }
 
 private:
-    cv::Size m_imSize { -1, -1 };
-    double m_fps { -1 };
-    std::int64_t m_processFreqMs { 1 };
-    std::int64_t m_lastProcessedFrameMs { -1 };
-    cvt::Areas m_areas;
-    cv::Mat m_AreaMask;
-    cv::Mat m_Gray;
-    cv::Mat m_PrevGray;
-    cv::Mat m_Flow;
 #if CV_MAJOR_VERSION == 3
     cv::Ptr<cv::optflow::DISOpticalFlow> m_disOpt;
 #else
     cv::Ptr<cv::DISOpticalFlow> m_disOpt;
 #endif
+    cv::Size m_imSize { -1, -1 };
+    double m_fps { -1 };
+    std::int64_t m_processFreqMs { 1 };
+    std::int64_t m_lastProcessedFrameMs { -1 };
+    float m_flowThresh { 5 };
+    double m_decisionThresh { 0.1 };
+    cvt::Areas m_areas;
+    cvt::EventTrigger m_eventTrigger;
+    std::int64_t m_eventHoldoutMs { 0 };
+    std::int64_t m_eventHolddownMs { 1000 };
+
+    cv::Mat m_FlowAreaMask;
+    cv::Mat m_Gray;
+    cv::Mat m_PrevGray;
+    cv::Mat m_Flow;
+    cv::Mat m_FlowUV[2];
+    cv::Mat m_FlowMagn;
+    cv::Mat m_FlowAngle;
+    cv::Mat m_Motion;
+    double m_maxMotion;
 
     void parseJsonConfig(const std::string& configPath)
     {
@@ -146,10 +197,20 @@ private:
             return;
         }
         
-        if ( !fdiffConfig["processFreqMs"].empty() )
-        {
-            m_processFreqMs = static_cast<std::int64_t>(fdiffConfig["processFreqMs"]);
-        }
+        if ( !fdiffConfig["process-freq-ms"].empty() )
+            m_processFreqMs = static_cast<std::int64_t>(fdiffConfig["process-freq-ms"]);
+        
+        if ( !fdiffConfig["max-accepted-motion-rate"].empty() )
+            m_decisionThresh = static_cast<double>(fdiffConfig["max-accepted-motion-rate"]);
+
+        if ( !fdiffConfig["alert-holddown-ms"].empty() )
+            m_eventHolddownMs = static_cast<std::int64_t>(fdiffConfig["alert-holddown-ms"]);
+        
+        if ( !fdiffConfig["--advanced--flow-thresh"].empty() )
+            m_flowThresh = static_cast<float>(fdiffConfig["--advanced--flow-thresh"]);
+        
+        if ( !fdiffConfig["--advanced--alert-holdout-ms"].empty() )
+            m_eventHoldoutMs = static_cast<std::int64_t>(fdiffConfig["--advanced--alert-holdout-ms"]);
 
         m_areas = cvt::parseAreas(fdiffConfig["areas"], m_imSize);
     }
@@ -174,6 +235,37 @@ private:
         }
 
         return false;
+    }
+
+    void motionMask_experimental(const cv::Mat& flow, cv::Mat& out)
+    {
+        if ( out.empty() )
+        {
+            out.create(flow.size(), CV_8U);
+        }
+        out.setTo(cv::Scalar(0));
+
+        cv::parallel_for_(cv::Range(0, flow.rows * flow.cols), [&](const cv::Range& range)
+        {
+            for ( int r = range.start; r < range.end; ++r )
+            {
+                int i = r / flow.cols;
+                int j = r % flow.cols;
+
+                const auto maskPixel = m_FlowAreaMask.at<cv::Point2f>(i, j);
+                if ( maskPixel.x * maskPixel.y == 0.0 ) continue;
+
+                const auto uu = -flow.at<cv::Point2f>(i, j);
+                if ( !cvt::isFlowCorrect(uu) ) continue;
+
+                const cv::Vec2f vv = cv::Vec2f(uu.x, uu.y);
+                const double magn = cv::norm(vv);
+
+                if ( magn < m_flowThresh ) continue;
+
+                out.at<uchar>(i, j) = 255;
+            }
+        });
     }
 
 };
@@ -225,6 +317,7 @@ int main(int argc, char** argv)
 
     std::cout << ">>> Input: " << input << std::endl;
     std::cout << ">>> Resolution: " << imSize << std::endl;
+    std::cout << ">>> Formal FPS: " << fps << std::endl;
     std::cout << ">>> Record: " << std::boolalpha << record << std::endl;
     std::cout << ">>> JSON file: " << jsonPath << std::endl;
 
