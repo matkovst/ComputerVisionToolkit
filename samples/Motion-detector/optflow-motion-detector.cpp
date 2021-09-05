@@ -34,6 +34,8 @@ static bool loop = true;
 
 std::unique_ptr<DetectorThreadManager> detectorThread;
 
+static const int MaxItemsInQueue = 100;
+
 
 class OptflowMotionDetector final : public Detector
 {
@@ -370,6 +372,13 @@ int main(int argc, char** argv)
                 player->timestamp()
             };
             detectorThread->iDataQueue.push(std::move(iData));
+        }
+
+        /* Check for events */
+        while ( detectorThread->oDataQueue.size() > 0 )
+        {
+            const auto& sharedEventItem = detectorThread->oDataQueue.pop1(1000);
+            std::cout << ">>> [EVENT]: " << sharedEventItem->eventDescr << " at " << sharedEventItem->eventTimestamp << std::endl;
         }
 
         /* Display info */
