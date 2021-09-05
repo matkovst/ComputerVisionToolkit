@@ -15,6 +15,7 @@
 #include <cvtoolkit/cvgui.hpp>
 #include <cvtoolkit/utils.hpp>
 #include <cvtoolkit/detector_manager.hpp>
+#include <cvtoolkit/math/gaussian_estimator.hpp>
 
 #include <json.hpp>
 using json = nlohmann::json;
@@ -46,15 +47,16 @@ public:
     OptflowMotionDetector(const Detector::InitializeData& iData)
         : m_imSize(iData.imSize)
         , m_fps(iData.fps)
-        , m_FlowAreaMask(cv::Mat::zeros(iData.imSize, CV_32FC2))
-        , m_Motion(cv::Mat::zeros(iData.imSize, CV_8U))
     {
         parseJsonConfig(iData.configPath);
+
+        m_FlowAreaMask = cv::Mat::zeros(m_detImSize, CV_32FC2);
+        m_Motion = cv::Mat::zeros(m_detImSize, CV_8U);
         
         /* Handle with areas */
         if ( m_areas.empty() )
         {
-            m_areas.emplace_back( cvt::createFullScreenArea(m_imSize) );
+            m_areas.emplace_back( cvt::createFullScreenArea(m_detImSize) );
         }
         cv::drawContours(m_FlowAreaMask, m_areas, -1, cv::Scalar::all(255), -1);
         const int totalArea = cvt::totalSqArea(m_areas);
@@ -71,6 +73,10 @@ public:
         int holdoutFrames = static_cast<int>(m_eventHoldoutMs * m_fps / 1000.0);
         int holddownFrames = static_cast<int>(m_eventHolddownMs * m_fps / 1000.0);
         m_eventTrigger.init(holdoutFrames, holddownFrames);
+
+        /* Handle with motion Gaussian */
+        double alpha = 1.0 / 100.0;
+        m_motionGaussian = std::make_unique<cvt::GaussianEstimator>(alpha);
     }
 
     ~OptflowMotionDetector() = default;
@@ -84,6 +90,10 @@ public:
 
         const cv::Mat frame = cv::Mat(m_imSize, in.imType, const_cast<unsigned char *>(in.imData), in.imStep);
         cv::cvtColor(frame, m_Gray, cv::COLOR_BGR2GRAY);
+        if ( m_detImSize != m_imSize )
+        {
+            cv::resize(m_Gray, m_Gray, m_detImSize, 0.0, 0.0, cv::INTER_AREA);
+        }
         
         if ( m_PrevGray.empty() )
         {
@@ -112,6 +122,9 @@ public:
 
         /* 4. Make decision */
         double totalMotion = cv::sum(m_Motion)[0] / m_maxMotion;
+
+        m_motionGaussian->observe(totalMotion);
+
         int event = m_eventTrigger( (totalMotion >= m_decisionThresh) );
         if ( event == cvt::EventTrigger::State::ABOUT_TO_ON )
         {
@@ -142,13 +155,19 @@ public:
         return m_areas;
     }
 
+    cv::Size detectorResolution() const noexcept
+    {
+        return m_detImSize;
+    }
+
 private:
 #if CV_MAJOR_VERSION == 3
     cv::Ptr<cv::optflow::DISOpticalFlow> m_disOpt;
 #else
     cv::Ptr<cv::DISOpticalFlow> m_disOpt;
 #endif
-    cv::Size m_imSize { -1, -1 };
+    cv::Size m_imSize;
+    cv::Size m_detImSize;
     double m_fps { -1 };
     std::int64_t m_processFreqMs { 1 };
     std::int64_t m_lastProcessedFrameMs { -1 };
@@ -158,6 +177,7 @@ private:
     cvt::EventTrigger m_eventTrigger;
     std::int64_t m_eventHoldoutMs { 0 };
     std::int64_t m_eventHolddownMs { 1000 };
+    std::unique_ptr<cvt::GaussianEstimator> m_motionGaussian;
 
     cv::Mat m_FlowAreaMask;
     cv::Mat m_Gray;
@@ -199,6 +219,11 @@ private:
             return;
         }
         
+        if ( !fdiffConfig["detector-resolution"].empty() )
+            m_detImSize = cvt::parseResolution(fdiffConfig["detector-resolution"]);
+        else
+            m_detImSize = m_imSize;
+        
         if ( !fdiffConfig["process-freq-ms"].empty() )
             m_processFreqMs = static_cast<std::int64_t>(fdiffConfig["process-freq-ms"]);
         
@@ -214,7 +239,7 @@ private:
         if ( !fdiffConfig["--advanced--alert-holdout-ms"].empty() )
             m_eventHoldoutMs = static_cast<std::int64_t>(fdiffConfig["--advanced--alert-holdout-ms"]);
 
-        m_areas = cvt::parseAreas(fdiffConfig["areas"], m_imSize);
+        m_areas = cvt::parseAreas(fdiffConfig["areas"], m_detImSize);
     }
 
     bool filterByTimestamp(std::int64_t timestamp)
@@ -239,38 +264,39 @@ private:
         return false;
     }
 
-    void motionMask_experimental(const cv::Mat& flow, cv::Mat& out)
-    {
-        if ( out.empty() )
-        {
-            out.create(flow.size(), CV_8U);
-        }
-        out.setTo(cv::Scalar(0));
+    // void motionMask_experimental(const cv::Mat& flow, cv::Mat& out)
+    // {
+    //     if ( out.empty() )
+    //     {
+    //         out.create(flow.size(), CV_8U);
+    //     }
+    //     out.setTo(cv::Scalar(0));
 
-        cv::parallel_for_(cv::Range(0, flow.rows * flow.cols), [&](const cv::Range& range)
-        {
-            for ( int r = range.start; r < range.end; ++r )
-            {
-                int i = r / flow.cols;
-                int j = r % flow.cols;
+    //     cv::parallel_for_(cv::Range(0, flow.rows * flow.cols), [&](const cv::Range& range)
+    //     {
+    //         for ( int r = range.start; r < range.end; ++r )
+    //         {
+    //             int i = r / flow.cols;
+    //             int j = r % flow.cols;
 
-                const auto maskPixel = m_FlowAreaMask.at<cv::Point2f>(i, j);
-                if ( maskPixel.x * maskPixel.y == 0.0 ) continue;
+    //             const auto maskPixel = m_FlowAreaMask.at<cv::Point2f>(i, j);
+    //             if ( maskPixel.x * maskPixel.y == 0.0 ) continue;
 
-                const auto uu = -flow.at<cv::Point2f>(i, j);
-                if ( !cvt::isFlowCorrect(uu) ) continue;
+    //             const auto uu = -flow.at<cv::Point2f>(i, j);
+    //             if ( !cvt::isFlowCorrect(uu) ) continue;
 
-                const cv::Vec2f vv = cv::Vec2f(uu.x, uu.y);
-                const double magn = cv::norm(vv);
+    //             const cv::Vec2f vv = cv::Vec2f(uu.x, uu.y);
+    //             const double magn = cv::norm(vv);
 
-                if ( magn < m_flowThresh ) continue;
+    //             if ( magn < m_flowThresh ) continue;
 
-                out.at<uchar>(i, j) = 255;
-            }
-        });
-    }
+    //             out.at<uchar>(i, j) = 255;
+    //         }
+    //     });
+    // }
 
 };
+
 
 
 void signalHandler(int code) 
@@ -382,7 +408,8 @@ int main(int argc, char** argv)
         }
 
         /* Display info */
-        out = frame.clone();
+        cv::Size detSize = motionDetector->detectorResolution();
+        cv::resize(frame, out, detSize);
         cvt::drawMotionField(motionDetector->flow(), out, 16);
         cvt::drawAreaMaskNeg(out, motionDetector->areas(), 0.8);
         if ( record )

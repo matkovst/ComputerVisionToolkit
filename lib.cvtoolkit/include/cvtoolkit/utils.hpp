@@ -46,4 +46,6 @@ void hstack2images( const cv::Mat& l, const cv::Mat& r, cv::Mat& out );
 
 void stack4images( const cv::Mat& lt, const cv::Mat& rt, const cv::Mat& lb, const cv::Mat& rb, cv::Mat& out );
 
+cv::Size parseResolution(const std::string& resol);
+
 }

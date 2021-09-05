@@ -10,7 +10,7 @@
 #include <cvtoolkit/cvplayer.hpp>
 #include <cvtoolkit/cvgui.hpp>
 #include <cvtoolkit/utils.hpp>
-#include <cvtoolkit/poisson_estimator.hpp>
+#include <cvtoolkit/math/poisson_estimator.hpp>
 
 #include <json.hpp>
 using json = nlohmann::json;
