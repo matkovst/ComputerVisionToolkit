@@ -77,9 +77,18 @@ int main(int argc, char** argv)
                 auto fdiffConfig = j["simple-motion-detector"];
                 if ( !fdiffConfig.empty() )
                 {
-                    areaMotionThresh = ( fdiffConfig["areaMotionThresh"].empty() ) ? areaMotionThresh : static_cast<int>(255.0 * fdiffConfig["areaMotionThresh"]);
-                    decisionThresh = ( fdiffConfig["decisionThresh"].empty() ) ? decisionThresh : 255 * static_cast<double>(fdiffConfig["decisionThresh"]);
-                    processFreqMs = ( fdiffConfig["processFreqMs"].empty() ) ? processFreqMs : static_cast<std::int64_t>(fdiffConfig["processFreqMs"]);
+                    if ( !fdiffConfig["areaMotionThresh"].empty() )
+                    {
+                        areaMotionThresh = static_cast<int>(255.0 * static_cast<double>(fdiffConfig["areaMotionThresh"]));
+                    }
+                    if ( fdiffConfig["decisionThresh"].empty() )
+                    {
+                        decisionThresh = 255 * static_cast<double>(fdiffConfig["decisionThresh"]);
+                    }
+                    if ( fdiffConfig["processFreqMs"].empty() )
+                    {
+                        processFreqMs = static_cast<std::int64_t>(fdiffConfig["processFreqMs"]);
+                    }
 
                     areas = cvt::parseAreas(fdiffConfig["areas"], imSize);
                 }

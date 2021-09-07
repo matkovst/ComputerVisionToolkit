@@ -1,5 +1,7 @@
 #include <cvtoolkit/detector_manager.hpp>
 
+namespace cvt
+{
 
 DetectorThreadManager::DetectorThreadManager(const std::shared_ptr<Detector>& detector, unsigned int threadID)
     : m_detector(detector)
@@ -69,4 +71,6 @@ bool DetectorThreadManager::isRunning() const noexcept
 const std::shared_ptr<Detector> DetectorThreadManager::detector() const noexcept
 {
     return m_detector;
+}
+
 }

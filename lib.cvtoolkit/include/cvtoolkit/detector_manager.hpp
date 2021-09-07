@@ -13,6 +13,10 @@
 #include "detector.hpp"
 #include "metrics.hpp"
 
+
+namespace cvt
+{
+
 template<typename T>
 class ConcurrentQueue final
 {
@@ -153,3 +157,5 @@ private:
     std::shared_ptr<cvt::MetricMaster> m_metrics;
     bool m_stopDetectorThreads { false };
 };
+
+}

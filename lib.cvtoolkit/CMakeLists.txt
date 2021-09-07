@@ -17,6 +17,9 @@ target_include_directories( ${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/i
 target_include_directories( ${PROJECT_NAME} PUBLIC ${OpenCV_INCLUDE_DIRS} )
 
 target_link_libraries( ${PROJECT_NAME} ${OpenCV_LIBS} )
+if (UNIX)
+    target_link_libraries( pthread )
+endif()
 
 
 install( TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/lib/ )

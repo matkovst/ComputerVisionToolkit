@@ -4,6 +4,12 @@
 
 #include <opencv2/core.hpp>
 
+#include <json.hpp>
+using json = nlohmann::json;
+
+
+namespace cvt
+{
 
 /*! @brief The base class for all detectors.
 
@@ -17,7 +23,7 @@ public:
     {
         cv::Size imSize;
         double fps;
-        std::string configPath;
+        std::string settingsPath;
     };
 
     struct InputData
@@ -74,3 +80,16 @@ public:
 
     virtual void process(const InputData& in, OutputData& out) = 0;
 };
+
+
+/*! @brief The base class for all detector settings.
+*/
+class DetectorSettings
+{
+public:
+    DetectorSettings(const json& jSettings);
+
+    virtual ~DetectorSettings() = default;
+};
+
+}
