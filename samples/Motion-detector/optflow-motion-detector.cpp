@@ -1,6 +1,7 @@
 #include <signal.h>
 #include <iostream>
 #include <fstream>
+#include <algorithm>
 
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
@@ -55,27 +56,30 @@ public:
 
     void parseJsonSettings(const json& j)
     {
-        auto fdiffConfig = j[m_instanceName];
-        if ( fdiffConfig.empty() )
+        auto jDetectorSettings = j[m_instanceName];
+        if ( jDetectorSettings.empty() )
         {
             std::cerr << ">>> Could not find " << m_instanceName << " section" << std::endl;
             return;
         }
         
-        if ( !fdiffConfig["process-freq-ms"].empty() )
-            m_processFreqMs = static_cast<std::int64_t>(fdiffConfig["process-freq-ms"]);
+        if ( !jDetectorSettings["process-freq-ms"].empty() )
+            m_processFreqMs = static_cast<std::int64_t>(jDetectorSettings["process-freq-ms"]);
         
-        if ( !fdiffConfig["max-accepted-motion-rate"].empty() )
-            m_decisionThresh = static_cast<double>(fdiffConfig["max-accepted-motion-rate"]);
+        if ( !jDetectorSettings["max-accepted-motion-rate"].empty() )
+            m_decisionThresh = static_cast<double>(jDetectorSettings["max-accepted-motion-rate"]);
 
-        if ( !fdiffConfig["alert-holddown-ms"].empty() )
-            m_eventHolddownMs = static_cast<std::int64_t>(fdiffConfig["alert-holddown-ms"]);
+        if ( !jDetectorSettings["min-accepted-velocity"].empty() )
+            m_minAcceptedVelocity = static_cast<float>(jDetectorSettings["min-accepted-velocity"]);
+
+        if ( !jDetectorSettings["max-accepted-velocity"].empty() )
+            m_maxAcceptedVelocity = static_cast<float>(jDetectorSettings["max-accepted-velocity"]);
+
+        if ( !jDetectorSettings["alert-holddown-ms"].empty() )
+            m_eventHolddownMs = static_cast<std::int64_t>(jDetectorSettings["alert-holddown-ms"]);
         
-        if ( !fdiffConfig["--advanced--flow-thresh"].empty() )
-            m_flowThresh = static_cast<float>(fdiffConfig["--advanced--flow-thresh"]);
-        
-        if ( !fdiffConfig["--advanced--alert-holdout-ms"].empty() )
-            m_eventHoldoutMs = static_cast<std::int64_t>(fdiffConfig["--advanced--alert-holdout-ms"]);
+        if ( !jDetectorSettings["--advanced--alert-holdout-ms"].empty() )
+            m_eventHoldoutMs = static_cast<std::int64_t>(jDetectorSettings["--advanced--alert-holdout-ms"]);
     }
 
     const std::int64_t processFreqMs() const noexcept
@@ -83,14 +87,19 @@ public:
         return m_processFreqMs;
     }
 
-    const float flowThresh() const noexcept
-    {
-        return m_flowThresh;
-    }
-
     const double decisionThresh() const noexcept
     {
         return m_decisionThresh;
+    }
+
+    const float minAcceptedVelocity() const noexcept
+    {
+        return m_minAcceptedVelocity;
+    }
+
+    const float maxAcceptedVelocity() const noexcept
+    {
+        return m_maxAcceptedVelocity;
     }
 
     const std::int64_t eventHoldoutMs() const noexcept
@@ -105,10 +114,11 @@ public:
 
 private:
     std::int64_t m_processFreqMs { 1 };
-    float m_flowThresh { 5 };
     double m_decisionThresh { 0.1 };
     std::int64_t m_eventHoldoutMs { 0 };
     std::int64_t m_eventHolddownMs { 1000 };
+    float m_minAcceptedVelocity { 5 };
+    float m_maxAcceptedVelocity { -1 };
 };
 
 
@@ -118,7 +128,7 @@ public:
     OptflowMotionDetector(const cvt::Detector::InitializeData& iData)
         : m_imSize(iData.imSize)
     {
-        json jSettings = makeJsonObject(iData.settingsPath);
+        json jSettings = cvt::makeJsonObject(iData.settingsPath);
         m_settings = std::make_shared<OptflowMotionDetectorSettings>(iData, jSettings);
 
         m_FlowAreaMask = cv::Mat::zeros(m_settings->detectorResolution(), CV_32FC2);
@@ -181,7 +191,7 @@ public:
         cv::cartToPolar(m_FlowUV[0], m_FlowUV[1], m_FlowMagn, m_FlowAngle, true);
 
         /* 3. Threshold */
-        cv::threshold(m_FlowMagn, m_Motion, m_settings->flowThresh(), 255, cv::THRESH_BINARY);
+        cv::threshold(m_FlowMagn, m_Motion, m_settings->minAcceptedVelocity(), 255, cv::THRESH_BINARY);
 
         // cv::Mat m_Motion2;
         // motionMask_experimental(m_Flow, m_Motion2);
@@ -243,33 +253,6 @@ private:
     cv::Mat m_Motion;
     double m_maxMotion;
 
-    json makeJsonObject(const std::string& jPath)
-    {
-        json j;
-
-        if ( jPath.empty() )
-        {
-            std::cout << ">>> JSON path must not be empty" << std::endl;
-            return j;
-        }
-
-        std::ifstream i(jPath.c_str());
-        if ( !i.good() )
-        {
-            std::cout << ">>> Could not read JSON file. Possibly file does not exist" << std::endl;
-            return j;
-        }
-
-        i >> j;
-        if ( j.empty() )
-        {
-            std::cerr << ">>> Could not create JSON object from file" << std::endl;
-            return j;
-        }
-        
-        return j;
-    }
-
     bool filterByTimestamp(std::int64_t timestamp)
     {
         if ( m_lastProcessedFrameMs == -1 )
@@ -316,7 +299,7 @@ private:
     //             const cv::Vec2f vv = cv::Vec2f(uu.x, uu.y);
     //             const double magn = cv::norm(vv);
 
-    //             if ( magn < m_settings->flowThresh() ) continue;
+    //             if ( magn < m_settings->minAcceptedVelocity() ) continue;
 
     //             out.at<uchar>(i, j) = 255;
     //         }

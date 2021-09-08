@@ -50,4 +50,7 @@ cv::Size parseResolution(const std::string& resol);
 
 json makeJsonObject(const std::string& jPath);
 
+template <typename T>
+T clip(const T& n, const T& lower, const T& upper);
+
 }

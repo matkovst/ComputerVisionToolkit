@@ -37,17 +37,17 @@ const Areas& DetectorSettings::areas() const noexcept
 
 void DetectorSettings::parseCommonJsonSettings(const json& j)
 {
-    auto fdiffConfig = j[m_instanceName];
-    if ( fdiffConfig.empty() )
+    auto jDetectorSettings = j[m_instanceName];
+    if ( jDetectorSettings.empty() )
     {
         std::cerr << ">>> [DetectorSettings] Could not find " << m_instanceName << " section" << std::endl;
         return;
     }
         
-    if ( !fdiffConfig["detector-resolution"].empty() )
-        m_detectorResolution = cvt::parseResolution(fdiffConfig["detector-resolution"]);
+    if ( !jDetectorSettings["detector-resolution"].empty() )
+        m_detectorResolution = cvt::parseResolution(jDetectorSettings["detector-resolution"]);
 
-    m_areas = cvt::parseAreas(fdiffConfig["areas"], m_detectorResolution);
+    m_areas = cvt::parseAreas(jDetectorSettings["areas"], m_detectorResolution);
 }
 
 }
