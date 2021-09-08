@@ -28,6 +28,7 @@ const cv::String argKeys =
         "{ @input i       |  0     | input stream }"
         "{ resize r       |  1.0   | resize scale factor }"
         "{ record e       |  false | do record }"
+        "{ display d      |  true  | whether display window or not }"
         "{ @json j        |        | path to json }"
         ;
 
@@ -38,24 +39,15 @@ std::unique_ptr<cvt::DetectorThreadManager> detectorThread;
 static const int MaxItemsInQueue = 100;
 
 
-class OptflowMotionDetectorSettings final
+class OptflowMotionDetectorSettings final : public cvt::DetectorSettings
 {
 public:
-
-    const std::string Name { "optflow-motion-detector" };
-
     OptflowMotionDetectorSettings(const cvt::Detector::InitializeData& iData, const json& jSettings)
-        : m_detectorResolution(iData.imSize)
+        : DetectorSettings(iData, jSettings)
     {
         if ( !jSettings.empty() )
         {
             parseJsonSettings(jSettings);
-        }
-        
-        /* Handle with areas */
-        if ( m_areas.empty() )
-        {
-            m_areas.emplace_back( cvt::createFullScreenArea(m_detectorResolution) );
         }
     }
 
@@ -63,15 +55,12 @@ public:
 
     void parseJsonSettings(const json& j)
     {
-        auto fdiffConfig = j[Name];
+        auto fdiffConfig = j[m_instanceName];
         if ( fdiffConfig.empty() )
         {
-            std::cerr << ">>> Could not find " << Name << " section" << std::endl;
+            std::cerr << ">>> Could not find " << m_instanceName << " section" << std::endl;
             return;
         }
-        
-        if ( !fdiffConfig["detector-resolution"].empty() )
-            m_detectorResolution = cvt::parseResolution(fdiffConfig["detector-resolution"]);
         
         if ( !fdiffConfig["process-freq-ms"].empty() )
             m_processFreqMs = static_cast<std::int64_t>(fdiffConfig["process-freq-ms"]);
@@ -87,18 +76,6 @@ public:
         
         if ( !fdiffConfig["--advanced--alert-holdout-ms"].empty() )
             m_eventHoldoutMs = static_cast<std::int64_t>(fdiffConfig["--advanced--alert-holdout-ms"]);
-
-        m_areas = cvt::parseAreas(fdiffConfig["areas"], m_detectorResolution);
-    }
-
-    const cv::Size detectorResolution() const noexcept
-    {
-        return m_detectorResolution;
-    }
-
-    const cvt::Areas& areas() const noexcept
-    {
-        return m_areas;
     }
 
     const std::int64_t processFreqMs() const noexcept
@@ -127,8 +104,6 @@ public:
     }
 
 private:
-    cv::Size m_detectorResolution;
-    cvt::Areas m_areas;
     std::int64_t m_processFreqMs { 1 };
     float m_flowThresh { 5 };
     double m_decisionThresh { 0.1 };
@@ -140,12 +115,8 @@ private:
 class OptflowMotionDetector final : public cvt::Detector
 {
 public:
-
-    const std::string Name { "optflow-motion-detector" };
-
     OptflowMotionDetector(const cvt::Detector::InitializeData& iData)
         : m_imSize(iData.imSize)
-        , m_fps(iData.fps)
     {
         json jSettings = makeJsonObject(iData.settingsPath);
         m_settings = std::make_shared<OptflowMotionDetectorSettings>(iData, jSettings);
@@ -165,8 +136,8 @@ public:
 #endif
 
         /* Handle with event trigger */
-        int holdoutFrames = static_cast<int>(m_settings->eventHoldoutMs() * m_fps / 1000.0);
-        int holddownFrames = static_cast<int>(m_settings->eventHolddownMs() * m_fps / 1000.0);
+        int holdoutFrames = static_cast<int>(m_settings->eventHoldoutMs() * m_settings->fps() / 1000.0);
+        int holddownFrames = static_cast<int>(m_settings->eventHolddownMs() * m_settings->fps() / 1000.0);
         m_eventTrigger.init(holdoutFrames, holddownFrames);
 
         /* Handle with motion Gaussian */
@@ -257,7 +228,6 @@ private:
     cv::Ptr<cv::DISOpticalFlow> m_disOpt;
 #endif
     cv::Size m_imSize;
-    double m_fps { -1 };
     std::int64_t m_lastProcessedFrameMs { -1 };
     cvt::EventTrigger m_eventTrigger;
     std::unique_ptr<cvt::GaussianEstimator> m_motionGaussian;
@@ -384,6 +354,7 @@ int main(int argc, char** argv)
     const double scaleFactor = parser.get<double>("resize");
     const bool doResize = (scaleFactor != 1.0);
     const bool record = parser.get<bool>("record");
+    const bool display = parser.get<bool>("display");
     const std::string jsonPath = parser.get<std::string>("@json");
     
     if (!parser.check())
@@ -405,10 +376,11 @@ int main(int argc, char** argv)
     std::cout << ">>> Resolution: " << imSize << std::endl;
     std::cout << ">>> Formal FPS: " << fps << std::endl;
     std::cout << ">>> Record: " << std::boolalpha << record << std::endl;
-    std::cout << ">>> JSON file: " << jsonPath << std::endl;
+    std::cout << ">>> Display: " << std::boolalpha << display << std::endl;
+    std::cout << ">>> JSON file: " << (( jsonPath.empty() ) ? "-" : jsonPath) << std::endl;
 
     /* Task-specific declarations */
-    cvt::Detector::InitializeData initData { imSize, fps, jsonPath };
+    cvt::Detector::InitializeData initData { "optflow-motion-detector", imSize, fps, jsonPath };
     std::shared_ptr<OptflowMotionDetector> motionDetector = std::make_shared<OptflowMotionDetector>(initData);
     detectorThread = std::make_unique<cvt::DetectorThreadManager>(motionDetector);
 
@@ -466,19 +438,26 @@ int main(int argc, char** argv)
         }
 
         /* Display info */
-        cv::Size detSize = motionDetector->settings()->detectorResolution();
-        cv::resize(frame, out, detSize);
-        cvt::drawMotionField(motionDetector->flow(), out, 16);
-        cvt::drawAreaMaskNeg(out, motionDetector->settings()->areas(), 0.8);
-        if ( record )
+        if ( record || display )
         {
-            *player << out;
+            cv::Size detSize = motionDetector->settings()->detectorResolution();
+            cv::resize(frame, out, detSize);
+            cvt::drawMotionField(motionDetector->flow(), out, 16);
+            cvt::drawAreaMaskNeg(out, motionDetector->settings()->areas(), 0.8);
+            if ( record )
+            {
+                *player << out;
+            }
+
+            if ( display )
+            {
+                if ( out.channels() == 1 )
+                {
+                    cv::cvtColor(out, out, cv::COLOR_GRAY2BGR);
+                }
+                gui.imshow(out, record);
+            }
         }
-        if ( out.channels() == 1 )
-        {
-            cv::cvtColor(out, out, cv::COLOR_GRAY2BGR);
-        }
-        gui.imshow(out, record);
     }
 
     if ( detectorThread->isRunning() )

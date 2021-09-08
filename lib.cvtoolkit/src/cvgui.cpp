@@ -1,6 +1,6 @@
-#include <sstream>
+#include "cvtoolkit/cvgui.hpp"
 
-#include <cvtoolkit/cvgui.hpp>
+#include <sstream>
 
 namespace cvt
 {
@@ -10,7 +10,6 @@ GUI::GUI(const std::string& winName, const std::shared_ptr<OpenCVPlayer>& player
     , m_player(player)
     , m_metrics(metrics)
 {
-    cv::namedWindow(m_winName, 1);
 }
 
 GUI::~GUI()

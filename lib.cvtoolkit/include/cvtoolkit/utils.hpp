@@ -48,4 +48,6 @@ void stack4images( const cv::Mat& lt, const cv::Mat& rt, const cv::Mat& lb, cons
 
 cv::Size parseResolution(const std::string& resol);
 
+json makeJsonObject(const std::string& jPath);
+
 }

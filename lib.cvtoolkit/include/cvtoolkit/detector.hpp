@@ -4,6 +4,8 @@
 
 #include <opencv2/core.hpp>
 
+#include "utils.hpp"
+
 #include <json.hpp>
 using json = nlohmann::json;
 
@@ -21,6 +23,7 @@ public:
 
     struct InitializeData
     {
+        std::string instanceName;
         cv::Size imSize;
         double fps;
         std::string settingsPath;
@@ -87,9 +90,24 @@ public:
 class DetectorSettings
 {
 public:
-    DetectorSettings(const json& jSettings);
+    DetectorSettings(const Detector::InitializeData& iData, const json& jSettings);
 
     virtual ~DetectorSettings() = default;
+
+    cv::Size detectorResolution() const noexcept;
+
+    double fps() const noexcept;
+
+    const Areas& areas() const noexcept;
+
+protected:
+    const std::string m_instanceName;
+    double m_fps;
+    cv::Size m_detectorResolution;
+    Areas m_areas;
+
+private:
+    void parseCommonJsonSettings(const json& j);
 };
 
 }

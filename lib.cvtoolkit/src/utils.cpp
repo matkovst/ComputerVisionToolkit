@@ -1,5 +1,7 @@
 #include <cvtoolkit/utils.hpp>
 
+#include <fstream>
+
 namespace cvt
 {
 
@@ -230,6 +232,33 @@ cv::Size parseResolution(const std::string& resol)
     const int w = std::stoi(resol.substr(0, pos));
     const int h = std::stoi(resol.substr(pos + 1));
     return cv::Size(w, h);
+}
+
+json makeJsonObject(const std::string& jPath)
+{
+    json j;
+
+    if ( jPath.empty() )
+    {
+        std::cout << ">>> JSON path must not be empty" << std::endl;
+        return j;
+    }
+
+    std::ifstream i(jPath.c_str());
+    if ( !i.good() )
+    {
+        std::cout << ">>> Could not read JSON file. Possibly file does not exist" << std::endl;
+        return j;
+    }
+
+    i >> j;
+    if ( j.empty() )
+    {
+        std::cerr << ">>> Could not create JSON object from file" << std::endl;
+        return j;
+    }
+    
+    return j;
 }
 
 }

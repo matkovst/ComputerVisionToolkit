@@ -18,7 +18,7 @@ target_include_directories( ${PROJECT_NAME} PUBLIC ${OpenCV_INCLUDE_DIRS} )
 
 target_link_libraries( ${PROJECT_NAME} ${OpenCV_LIBS} )
 if (UNIX)
-    target_link_libraries( pthread )
+    target_link_libraries( ${PROJECT_NAME} pthread )
 endif()
 
 
