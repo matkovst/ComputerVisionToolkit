@@ -20,19 +20,22 @@ public:
 
     void parseJsonSettings(const json& j);
 
-    const std::int64_t processFreqMs() const noexcept;
-
     const std::string yoloPath() const noexcept;
 
     float yoloMinConf() const noexcept;
 
     const std::vector<std::string>& acceptedClasses() const noexcept;
 
+    int backend() const noexcept;
+
+    int target() const noexcept;
+
 private:
-    std::int64_t m_processFreqMs { 1 };
     std::string m_yoloPath;
     float m_yoloMinConf { 0.25f };
     std::vector<std::string> m_acceptedClasses;
+    int m_backend { 0 };
+    int m_target { 0 };
 };
 
 

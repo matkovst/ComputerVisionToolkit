@@ -9,6 +9,8 @@
         [
             "person", "car"
         ],
+        "yolo-backend-id" : 0,
+        "yolo-target-id" : 0,
 
         "display-detailed" : true,
 

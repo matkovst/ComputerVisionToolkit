@@ -22,9 +22,6 @@ void OptflowMotionDetectorSettings::parseJsonSettings(const json& j)
         return;
     }
     
-    if ( !jDetectorSettings["process-freq-ms"].empty() )
-        m_processFreqMs = static_cast<std::int64_t>(jDetectorSettings["process-freq-ms"]);
-    
     if ( !jDetectorSettings["max-accepted-motion-rate"].empty() )
         m_decisionThresh = static_cast<double>(jDetectorSettings["max-accepted-motion-rate"]);
 
@@ -39,11 +36,6 @@ void OptflowMotionDetectorSettings::parseJsonSettings(const json& j)
     
     if ( !jDetectorSettings["--advanced--alert-holdout-ms"].empty() )
         m_eventHoldoutMs = static_cast<std::int64_t>(jDetectorSettings["--advanced--alert-holdout-ms"]);
-}
-
-const std::int64_t OptflowMotionDetectorSettings::processFreqMs() const noexcept
-{
-    return m_processFreqMs;
 }
 
 const double OptflowMotionDetectorSettings::decisionThresh() const noexcept
@@ -136,7 +128,14 @@ void OptflowMotionDetector::process(const Detector::InputData& in, Detector::Out
     cv::cartToPolar(m_FlowUV[0], m_FlowUV[1], m_FlowMagn, m_FlowAngle, true);
 
     /* 3. Threshold */
-    cv::threshold(m_FlowMagn, m_Motion, m_settings->minAcceptedVelocity(), 255, cv::THRESH_BINARY);
+    if ( m_settings->maxAcceptedVelocity() > 0.0 && m_settings->maxAcceptedVelocity() < 255 )
+    {
+        cv::threshold(m_FlowMagn, m_Motion, 0, m_settings->maxAcceptedVelocity(), cv::THRESH_BINARY);
+    }
+    if ( m_settings->minAcceptedVelocity() > 0.0 )
+    {
+        cv::threshold(m_FlowMagn, m_Motion, m_settings->minAcceptedVelocity(), 255, cv::THRESH_BINARY);
+    }
 
     // cv::Mat m_Motion2;
     // motionMask_experimental(m_Flow, m_Motion2);
@@ -178,6 +177,8 @@ const std::shared_ptr<OptflowMotionDetectorSettings>& OptflowMotionDetector::set
 
 bool OptflowMotionDetector::filterByTimestamp(std::int64_t timestamp)
 {
+    if ( m_settings->processFreqMs() <= 0 ) return false;
+    
     if ( m_lastProcessedFrameMs == -1 )
     {
         m_lastProcessedFrameMs = timestamp;

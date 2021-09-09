@@ -30,6 +30,11 @@ double DetectorSettings::fps() const noexcept
     return m_fps;
 }
 
+std::int64_t DetectorSettings::processFreqMs() const noexcept
+{
+    return m_processFreqMs;
+}
+
 const Areas& DetectorSettings::areas() const noexcept
 {
     return m_areas;
@@ -51,6 +56,9 @@ void DetectorSettings::parseCommonJsonSettings(const json& j)
         
     if ( !jDetectorSettings["detector-resolution"].empty() )
         m_detectorResolution = cvt::parseResolution(jDetectorSettings["detector-resolution"]);
+    
+    if ( !jDetectorSettings["process-freq-ms"].empty() )
+        m_processFreqMs = static_cast<std::int64_t>(jDetectorSettings["process-freq-ms"]);
         
     if ( !jDetectorSettings["display-detailed"].empty() )
         m_displayDetailed = static_cast<bool>(jDetectorSettings["display-detailed"]);

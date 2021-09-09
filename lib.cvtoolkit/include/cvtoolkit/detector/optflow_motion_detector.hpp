@@ -26,8 +26,6 @@ public:
 
     void parseJsonSettings(const json& j);
 
-    const std::int64_t processFreqMs() const noexcept;
-
     const double decisionThresh() const noexcept;
 
     const float minAcceptedVelocity() const noexcept;
@@ -39,7 +37,6 @@ public:
     const std::int64_t eventHolddownMs() const noexcept;
 
 private:
-    std::int64_t m_processFreqMs { 1 };
     double m_decisionThresh { 0.1 };
     std::int64_t m_eventHoldoutMs { 0 };
     std::int64_t m_eventHolddownMs { 1000 };

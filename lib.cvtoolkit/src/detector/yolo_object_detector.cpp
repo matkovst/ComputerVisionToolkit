@@ -22,9 +22,6 @@ void YOLOObjectDetectorSettings::parseJsonSettings(const json& j)
         return;
     }
     
-    if ( !jDetectorSettings["process-freq-ms"].empty() )
-        m_processFreqMs = static_cast<std::int64_t>(jDetectorSettings["process-freq-ms"]);
-    
     if ( !jDetectorSettings["yolo-path"].empty() )
         m_yoloPath = static_cast<std::string>(jDetectorSettings["yolo-path"]);
     
@@ -35,11 +32,6 @@ void YOLOObjectDetectorSettings::parseJsonSettings(const json& j)
             m_acceptedClasses.emplace_back(static_cast<std::string>(aClass));
         }
     }
-}
-
-const std::int64_t YOLOObjectDetectorSettings::processFreqMs() const noexcept
-{
-    return m_processFreqMs;
 }
 
 const std::string YOLOObjectDetectorSettings::yoloPath() const noexcept
@@ -57,6 +49,16 @@ const std::vector<std::string>& YOLOObjectDetectorSettings::acceptedClasses() co
     return m_acceptedClasses;
 }
 
+int YOLOObjectDetectorSettings::backend() const noexcept
+{
+    return m_backend;
+}
+
+int YOLOObjectDetectorSettings::target() const noexcept
+{
+    return m_target;
+}
+
 
 YOLOObjectDetector::YOLOObjectDetector(const Detector::InitializeData& iData)
     : m_imSize(iData.imSize)
@@ -67,7 +69,8 @@ YOLOObjectDetector::YOLOObjectDetector(const Detector::InitializeData& iData)
     const std::string wPath = m_settings->yoloPath() + "/yolo.weights";
     const std::string cPath = m_settings->yoloPath() + "/yolo.cfg";
     const std::string nPath = m_settings->yoloPath() + "/yolo.names";
-    m_yoloDetector = std::make_unique<YOLOObjectNNDetector>(cPath, wPath, nPath);
+    m_yoloDetector = std::make_unique<YOLOObjectNNDetector>(cPath, wPath, nPath,
+        m_settings->backend(), m_settings->target());
 
     /* Form accepted classes */
     const auto& acceptedClassesVec = m_settings->acceptedClasses();
@@ -139,6 +142,8 @@ const std::shared_ptr<YOLOObjectDetectorSettings>& YOLOObjectDetector::settings(
 
 bool YOLOObjectDetector::filterByTimestamp(std::int64_t timestamp)
 {
+    if ( m_settings->processFreqMs() <= 0 ) return false;
+
     if ( m_lastProcessedFrameMs == -1 )
     {
         m_lastProcessedFrameMs = timestamp;

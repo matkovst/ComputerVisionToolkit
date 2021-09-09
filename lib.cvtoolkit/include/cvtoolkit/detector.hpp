@@ -48,11 +48,8 @@ public:
         }
         
         InputData(const InputData&) = default;
-
         InputData& operator=(const InputData&) = default;
-
         InputData(InputData&& other) = default;
-
         InputData& operator=(InputData&& other) = default;
     };
 
@@ -74,11 +71,8 @@ public:
         }
         
         OutputData(const OutputData&) = default;
-
         OutputData& operator=(const OutputData&) = default;
-
         OutputData(OutputData&& other) = default;
-
         OutputData& operator=(OutputData&& other) = default;
     };
 
@@ -104,6 +98,8 @@ public:
 
     double fps() const noexcept;
 
+    std::int64_t processFreqMs() const noexcept;
+
     const Areas& areas() const noexcept;
 
     bool displayDetailed() const noexcept;
@@ -112,6 +108,7 @@ protected:
     const std::string m_instanceName;
     double m_fps;
     cv::Size m_detectorResolution;
+    std::int64_t m_processFreqMs { 0 };
     Areas m_areas;
     bool m_displayDetailed { false };
 

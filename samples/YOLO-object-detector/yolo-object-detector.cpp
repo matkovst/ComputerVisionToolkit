@@ -141,7 +141,12 @@ int main(int argc, char** argv)
         while ( detectorThread->oDataQueue.size() > 0 )
         {
             const auto& sharedEventItem = detectorThread->oDataQueue.pop1(1000);
-            std::cout << ">>> [EVENT]: " << sharedEventItem->eventDescr << " at " << sharedEventItem->eventTimestamp << std::endl;
+            std::cout << ">>> [EVENT]: " << sharedEventItem->eventDescr << ":";
+            for (const auto& inferOut : sharedEventItem->eventInferOuts)
+            {
+                std::cout << " " << inferOut.className;
+            }
+            std::cout << " at " << sharedEventItem->eventTimestamp << std::endl;
             if ( !sharedEventItem->eventDetailedFrame.empty() )
             {
                 *detailedFramePtr = sharedEventItem->eventDetailedFrame;
