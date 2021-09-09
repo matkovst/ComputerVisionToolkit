@@ -5,6 +5,7 @@
 #include <opencv2/core.hpp>
 
 #include "utils.hpp"
+#include "nndetector.hpp"
 
 #include <json.hpp>
 using json = nlohmann::json;
@@ -61,6 +62,8 @@ public:
         std::vector<cv::Rect> eventRects { };
         std::int64_t eventTimestamp { -1 };
         std::string eventDescr { "" };
+        InferOuts eventInferOuts;
+        cv::Mat eventDetailedFrame;
 
         OutputData(bool event = false, const std::vector<cv::Rect>& eventRects = { }, std::int64_t eventTimestamp = -1, std::string eventDescr = "")
             : event(event)
@@ -82,6 +85,9 @@ public:
     virtual ~Detector() = default;
 
     virtual void process(const InputData& in, OutputData& out) = 0;
+
+protected:
+    std::shared_ptr<MetricMaster> m_metrics;
 };
 
 
@@ -100,11 +106,14 @@ public:
 
     const Areas& areas() const noexcept;
 
+    bool displayDetailed() const noexcept;
+
 protected:
     const std::string m_instanceName;
     double m_fps;
     cv::Size m_detectorResolution;
     Areas m_areas;
+    bool m_displayDetailed { false };
 
 private:
     void parseCommonJsonSettings(const json& j);

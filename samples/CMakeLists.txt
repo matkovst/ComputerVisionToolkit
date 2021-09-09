@@ -19,4 +19,6 @@ add_subdirectory( Image-processing )
 
 add_subdirectory( Motion-detector )
 
+add_subdirectory( YOLO-object-detector )
+
 add_subdirectory( Custom-pipeline )

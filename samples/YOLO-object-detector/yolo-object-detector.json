@@ -1,0 +1,40 @@
+{
+    "yolo-object-detector" : 
+    {
+        "detector-resolution" : "640x360",
+        "process-freq-ms" : 1000,
+        "yolo-path" : "../data/yolov3",
+        "yolo-min-conf" : 0.4,
+        "yolo-accepted-classes" : 
+        [
+            "person", "car"
+        ],
+
+        "display-detailed" : true,
+
+        "areas" : 
+        [
+            {
+                "points" : 
+                [
+                    {
+                        "x" : 0.1,
+                        "y" : 0.1
+                    },
+                    {
+                        "x" : 0.9,
+                        "y" : 0.1
+                    },
+                    {
+                        "x" : 0.9,
+                        "y" : 0.9
+                    },
+                    {
+                        "x" : 0.1,
+                        "y" : 0.9
+                    }
+                ]
+            }
+        ]
+    }
+}

@@ -35,6 +35,11 @@ const Areas& DetectorSettings::areas() const noexcept
     return m_areas;
 }
 
+bool DetectorSettings::displayDetailed() const noexcept
+{
+    return m_displayDetailed;
+}
+
 void DetectorSettings::parseCommonJsonSettings(const json& j)
 {
     auto jDetectorSettings = j[m_instanceName];
@@ -46,6 +51,9 @@ void DetectorSettings::parseCommonJsonSettings(const json& j)
         
     if ( !jDetectorSettings["detector-resolution"].empty() )
         m_detectorResolution = cvt::parseResolution(jDetectorSettings["detector-resolution"]);
+        
+    if ( !jDetectorSettings["display-detailed"].empty() )
+        m_displayDetailed = static_cast<bool>(jDetectorSettings["display-detailed"]);
 
     m_areas = cvt::parseAreas(jDetectorSettings["areas"], m_detectorResolution);
 }

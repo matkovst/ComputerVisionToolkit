@@ -6,10 +6,11 @@
 #include <opencv2/highgui.hpp>
 
 #include <cvtoolkit/cvgui.hpp>
-#include <cvtoolkit/detector/optflow_motion_detector.hpp>
+#include <cvtoolkit/detector/yolo_object_detector.hpp>
 
 
-const static std::string WinName = "Motion detection via optical flow";
+const static std::string WinName = "YOLO object detection";
+const static std::string DetName = "yolo-object-detector";
 
 const cv::String argKeys =
         "{ help usage ?   |        | print help }"
@@ -80,15 +81,20 @@ int main(int argc, char** argv)
     std::cout << ">>> JSON file: " << (( jsonPath.empty() ) ? "-" : jsonPath) << std::endl;
 
     /* Task-specific declarations */
-    cvt::Detector::InitializeData initData { "optflow-motion-detector", imSize, fps, jsonPath };
-    std::shared_ptr<cvt::OptflowMotionDetector> motionDetector = std::make_shared<cvt::OptflowMotionDetector>(initData);
-    detectorThread = std::make_unique<cvt::DetectorThreadManager>(motionDetector);
+    cvt::Detector::InitializeData initData { DetName, imSize, fps, jsonPath };
+    std::shared_ptr<cvt::YOLOObjectDetector> objectDetector = std::make_shared<cvt::YOLOObjectDetector>(initData);
+    detectorThread = std::make_unique<cvt::DetectorThreadManager>(objectDetector);
 
     /* Detector loop */
     detectorThread->run();
 
     /* Main loop */
     cv::Mat frame, out;
+    std::shared_ptr<cv::Mat> detailedFramePtr;
+    if ( display )
+    {
+        detailedFramePtr = std::make_shared<cv::Mat>();
+    }
     while ( loop )
     {
         auto m = metrics->measure();
@@ -116,6 +122,7 @@ int main(int argc, char** argv)
         {
             if ( detectorThread->iDataQueue.size() >= MaxItemsInQueue )
             {
+                std::cout << ">>> Queue overflow. Do cleaning ..." << std::endl;
                 detectorThread->iDataQueue.clear();
             }
 
@@ -135,15 +142,18 @@ int main(int argc, char** argv)
         {
             const auto& sharedEventItem = detectorThread->oDataQueue.pop1(1000);
             std::cout << ">>> [EVENT]: " << sharedEventItem->eventDescr << " at " << sharedEventItem->eventTimestamp << std::endl;
+            if ( !sharedEventItem->eventDetailedFrame.empty() )
+            {
+                *detailedFramePtr = sharedEventItem->eventDetailedFrame;
+            }
         }
 
         /* Display info */
         if ( record || display )
         {
-            cv::Size detSize = motionDetector->settings()->detectorResolution();
+            cv::Size detSize = objectDetector->settings()->detectorResolution();
             cv::resize(frame, out, detSize);
-            cvt::drawMotionField(motionDetector->flow(), out, 16);
-            cvt::drawAreaMaskNeg(out, motionDetector->settings()->areas(), 0.8);
+            cvt::drawAreaMaskNeg(out, objectDetector->settings()->areas(), 0.8);
             if ( record )
             {
                 *player << out;
@@ -156,6 +166,10 @@ int main(int argc, char** argv)
                     cv::cvtColor(out, out, cv::COLOR_GRAY2BGR);
                 }
                 gui.imshow(out, record);
+                if ( detailedFramePtr && !detailedFramePtr->empty() )
+                {
+                    cv::imshow("Detailed", *detailedFramePtr);
+                }
             }
         }
     }

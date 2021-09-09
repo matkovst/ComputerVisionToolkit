@@ -3,6 +3,8 @@
 #include <iostream>
 #include <map>
 #include <opencv2/dnn.hpp>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/highgui.hpp>
 
 #include "types.hpp"
 
@@ -11,6 +13,7 @@ namespace cvt
 {
 
 static const float DEFAULT_CONF = 0.25f;
+static const float DEFAULT_NMS_THRESH = 0.4f;
 
 using ObjectClasses = std::map<int, std::string>;
 
@@ -23,6 +26,11 @@ public:
     NNDetector() {}
 
     virtual ~NNDetector() = default;
+
+    virtual bool empty() const noexcept
+    {
+        return m_net.empty();
+    }
 
 protected:
     cv::dnn::Net m_net;
@@ -91,6 +99,39 @@ protected:
 
 private:
     std::vector<cv::String> m_outNames;
+
+    inline void preprocess( const cv::Mat& frame );
+
+    void postprocess( const cv::Mat& frame, const std::vector<cv::Mat>& outs, 
+                InferOuts& inferOuts, float confThreshold = 0.25f, const ObjectClasses& acceptedClasses = ObjectClasses() );
+
+    inline std::string getClassName( int classId );
+};
+
+
+/*! @brief The class implements YOLO alhorithm.
+*/
+class YOLOObjectNNDetector final : public ObjectNNDetector
+{
+public:
+    YOLOObjectNNDetector( const std::string& cfgPath, const std::string& modelPath, const std::string& classNamesPath, 
+                            int backend = cv::dnn::DNN_BACKEND_DEFAULT, int target = cv::dnn::DNN_TARGET_CPU );
+
+    ~YOLOObjectNNDetector() = default;
+
+    void Infer( const cv::Mat& frame, InferOuts& out, 
+                float confThreshold = DEFAULT_CONF, const ObjectClasses& acceptedClasses = ObjectClasses() ) override;
+
+    void Filter( const InferOuts& in, InferOuts& out, const ObjectClasses& acceptedClasses ) override;
+
+    const ObjectClasses& yoloObjectClasses() const noexcept;
+
+protected:
+    void readObjectClasses( const std::string& classPath ) override;
+
+private:
+    std::vector<cv::String> m_outNames;
+    std::vector<int> m_outLayers;
 
     inline void preprocess( const cv::Mat& frame );
 
