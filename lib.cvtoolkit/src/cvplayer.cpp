@@ -156,9 +156,9 @@ int OpenCVPlayer::getInputType(const std::string& input) const
     {
         return InputType::IMAGE;
     }
+    std::string protocol = input.substr(0, 4);
     if (std::find(supportedVideoContainers.begin(), supportedVideoContainers.end(), ext) != supportedVideoContainers.end())
     {
-        std::string protocol = input.substr(0, 4);
         if (protocol == "rtsp" || protocol == "http") 
         {
             return InputType::LIVESTREAM;
@@ -167,6 +167,10 @@ int OpenCVPlayer::getInputType(const std::string& input) const
         {
             return InputType::VIDEO;
         }
+    }
+    if (protocol == "rtsp" || protocol == "http") 
+    {
+        return InputType::LIVESTREAM;
     }
 
     return InputType::NONE;

@@ -1,10 +1,46 @@
-#include <cvtoolkit/nndetector.hpp>
+#include "cvtoolkit/nndetector.hpp"
 
 #include <fstream>
 #include <sstream>
 
 namespace cvt
 {
+
+void ImageNNClassifier::readObjectClasses( const std::string& classPath )
+{
+    std::ifstream ifs(classPath.c_str());
+    if ( !ifs.is_open() )
+    {
+        std::cout << ">>> [ImageNNClassifier] Class names file " << classPath << " not found" << std::endl;
+    }
+
+    int lineId = 0;
+    std::string line;
+    while ( std::getline(ifs, line) ) 
+    {
+        m_objectClasses[lineId] = line;
+        ++lineId;
+    }
+}
+
+const ObjectClasses& ImageNNClassifier::objectClasses() const noexcept
+{
+    return m_objectClasses;
+}
+
+inline std::string ImageNNClassifier::getClassName( int classId )
+{
+    if ( m_objectClasses.empty() )
+    {
+        return "";
+    }
+    return m_objectClasses[classId];
+}
+
+
+// ************************************************************************************************
+// ***                                          MaskRCNN                                        ***
+// ************************************************************************************************
 
 MaskRCNNObjectDetector::MaskRCNNObjectDetector( const std::string& cfgPath, const std::string& modelPath, const std::string& cocoPath, 
                                                 int backend, int target )
@@ -140,6 +176,10 @@ inline std::string MaskRCNNObjectDetector::getClassName( int classId )
     return m_objectClasses[classId];
 }
 
+
+// ************************************************************************************************
+// ***                                            YOLO                                          ***
+// ************************************************************************************************
 
 YOLOObjectNNDetector::YOLOObjectNNDetector( const std::string& cfgPath, const std::string& modelPath, const std::string& classNamesPath, 
                                                 int backend, int target )
@@ -277,6 +317,73 @@ inline std::string YOLOObjectNNDetector::getClassName( int classId )
         return "";
     }
     return m_objectClasses[classId];
+}
+
+
+// ************************************************************************************************
+// ***                                          Inception                                       ***
+// ************************************************************************************************
+
+InceptionNNClassifier::InceptionNNClassifier( const std::string& modelPath, 
+                            const std::string& classNamesPath, int backend, int target,
+                            const std::string& inputBlobName, const std::string& outputBlobName )
+    : m_inputBlobName(inputBlobName)
+    , m_outputBlobName(outputBlobName)
+{
+    try
+    {
+        m_net = cv::dnn::readNetFromTensorflow( modelPath );
+        m_net.setPreferableBackend( backend );
+        m_net.setPreferableTarget( target );
+
+        readObjectClasses( classNamesPath );
+    }
+    catch( const cv::Exception& e )
+    {
+        std::cerr << e.what() << std::endl;
+    }
+    catch( const std::exception& e )
+    {
+        std::cerr << e.what() << std::endl;
+    }
+}
+
+void InceptionNNClassifier::Infer( const cv::Mat& frame, InferOuts& out, 
+                float confThreshold, const ObjectClasses& acceptedClasses )
+{
+    preprocess( frame );
+
+    cv::Mat outLayer = m_net.forward( m_outputBlobName );
+
+    postprocess( frame, outLayer, out, confThreshold, acceptedClasses );
+}
+
+
+inline void InceptionNNClassifier::preprocess( const cv::Mat& frame )
+{
+    static cv::Mat blob;
+    // Create a 4D blob from a frame.
+    cv::dnn::blobFromImage(frame, blob, 1.0, cv::Size(224, 224), cv::Scalar(), true, false);
+    blob -= 117.0;
+
+    m_net.setInput(blob, m_inputBlobName);
+}
+
+void InceptionNNClassifier::postprocess( const cv::Mat& frame, const cv::Mat& out, 
+                InferOuts& inferOuts, float confThreshold, const ObjectClasses& acceptedClasses )
+{
+    /* Get top-5 classes */
+    cv::Mat sortedOut, sortedOutIdx;
+    cv::sort(out, sortedOut, cv::SORT_EVERY_ROW + cv::SORT_DESCENDING);
+    cv::sortIdx(out, sortedOutIdx, cv::SORT_EVERY_ROW + cv::SORT_DESCENDING);
+
+    const int tops = 5;
+    for (size_t i = 0; i < tops; ++i)
+    {
+        const int classId = sortedOutIdx.at<int>(i);
+        InferOut iOut = { classId, getClassName(classId), sortedOut.at<float>(i), cv::Rect(), cv::Mat() };
+        inferOuts.emplace_back( iOut );
+    }
 }
 
 }

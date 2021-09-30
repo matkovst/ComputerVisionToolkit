@@ -32,6 +32,8 @@ struct InferOut
 
     float confidence;
 
+    /** (optional) Object coordinates.
+     */
     cv::Rect location;
 
     /** (optional) Semantic object mask.

@@ -79,6 +79,47 @@ protected:
 };
 
 
+/*! @brief The base class for all neural network image classifires.
+
+    The derived classes inherited from this class may solve classification problems.
+*/
+class ImageNNClassifier : public NNDetector
+{
+public:
+    ImageNNClassifier() {}
+    
+    virtual ~ImageNNClassifier() = default;
+
+    /*! @brief Performes model inference.
+
+        @param frame input frame
+        @param out output structure
+        @param confThreshold minimum allowed object confidence
+        @param acceptedClasses the list of accepted classes required for filtration. 
+        If none, no filtration is performed.
+    */
+    virtual void Infer( const cv::Mat& frame, InferOuts& out, 
+                        float confThreshold = DEFAULT_CONF, const ObjectClasses& acceptedClasses = ObjectClasses() ) = 0;
+
+    /*! @brief Returns object classes array.
+
+        @return ObjectClasses array
+    */
+    virtual const ObjectClasses& objectClasses() const noexcept;
+
+    virtual inline std::string getClassName( int classId );
+
+protected:
+    ObjectClasses m_objectClasses;
+
+    /*! @brief Reads class names from file.
+
+        @param classPath path to the class names file
+    */
+    virtual void readObjectClasses( const std::string& classPath );
+};
+
+
 /*! @brief The class implements Mask R-CNN alhorithm.
 */
 class MaskRCNNObjectDetector final : public ObjectNNDetector
@@ -139,6 +180,35 @@ private:
                 InferOuts& inferOuts, float confThreshold = 0.25f, const ObjectClasses& acceptedClasses = ObjectClasses() );
 
     inline std::string getClassName( int classId );
+};
+
+
+/*! @brief The class implements Inception model.
+*/
+class InceptionNNClassifier final : public ImageNNClassifier
+{
+public:
+    InceptionNNClassifier( const std::string& modelPath, const std::string& classNamesPath, 
+                            int backend = cv::dnn::DNN_BACKEND_DEFAULT, 
+                            int target = cv::dnn::DNN_TARGET_CPU,
+                            const std::string& inputBlobName = "input", 
+                            const std::string& outputBlobName = "softmax2" );
+
+    ~InceptionNNClassifier() = default;
+
+    void Infer( const cv::Mat& frame, InferOuts& out, float confThreshold = DEFAULT_CONF, 
+                            const ObjectClasses& acceptedClasses = ObjectClasses() ) override;
+
+private:
+    std::string m_inputBlobName;
+    std::string m_outputBlobName;
+
+    inline void preprocess( const cv::Mat& frame );
+
+    void postprocess( const cv::Mat& frame, const cv::Mat& out, 
+                InferOuts& inferOuts, float confThreshold = 0.25f, const ObjectClasses& acceptedClasses = ObjectClasses() );
+
+    void getTop1Class(const cv::Mat &probBlob, int *classId, double *classProb);
 };
 
 }
