@@ -22,4 +22,5 @@ MACRO(add_example NAME)
         RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
 ENDMACRO()
 
-add_example( illumination-estimation )
+add_example( grey-world )
+add_example( grey-edge )

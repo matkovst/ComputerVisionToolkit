@@ -35,12 +35,13 @@ public:
 
 protected:
     const json m_jSettings;
+    json m_jNodeSettings;
 
 private:
     std::string m_input { "0" };
     cv::Size m_inputSize { 640, 360 };
     bool m_record { false };
-    bool m_display { false };
+    bool m_display { true };
     bool m_gpu { false };
     Areas m_areas;
 };

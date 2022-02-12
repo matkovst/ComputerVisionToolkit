@@ -1,0 +1,30 @@
+{
+    "grey-world" : 
+    {
+        "input" : "0",
+        "input-size" : "640x480",
+        "record" : false,
+        "display" : true,
+        "gpu" : false,
+
+        "Minkowski-norm" : 6,
+        "Gauss-ksize" : 3,
+        "Gauss-sigmax" : 1,
+        "specularity-threshold" : 254
+    },
+    
+    "grey-edge" : 
+    {
+        "input" : "0",
+        "input-size" : "640x480",
+        "record" : false,
+        "display" : true,
+        "gpu" : false,
+
+        "Minkowski-norm" : 6,
+        "Gauss-ksize" : 3,
+        "Gauss-sigmax" : 1,
+        "specularity-threshold" : 254,
+        "derivative-order" : 1
+    }
+}

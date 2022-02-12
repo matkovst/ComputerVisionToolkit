@@ -93,6 +93,8 @@ void GUI::drawTelemetry(cv::Mat& frame, bool record)
         return;
     }
 
+    drawTransparentBase(frame, "curr. time (ms): 9999999", 75);
+
     const int ymargin = 22;
     int offset = ymargin;
     cv::putText(frame, "frame no: " + std::to_string(m_metrics->totalCalls()), cv::Point(0, offset), m_fontFace, m_fontScale,
@@ -109,6 +111,29 @@ void GUI::drawTelemetry(cv::Mat& frame, bool record)
         cv::putText(frame, "Record", cv::Point(0, offset), m_fontFace, m_fontScale,
                     cv::Scalar(0, 0, 255), m_thickness, 8);
     }
+}
+
+cv::Rect GUI::drawTransparentBase(cv::Mat& frame, const std::string& underlyingText, int height,
+                                cv::Point org, double opacity) const
+{
+    int baseline;
+    const cv::Size txtLen = cv::getTextSize(underlyingText, m_fontFace, m_fontScale, 
+                                            m_thickness, &baseline);
+
+    const cv::Rect baseRect = cv::Rect(org.x, org.y, txtLen.width, height);
+    if (txtLen.width < frame.cols && height < frame.rows)
+    {
+        cv::Mat roi = frame(baseRect);
+        cv::Mat color(roi.size(), roi.type(), cv::Scalar(0, 0, 0));
+        cv::addWeighted(color, opacity, roi, 1.0 - opacity , 0.0, roi);
+    }
+
+    return baseRect;
+}
+
+void GUI::putText(cv::Mat& frame, const std::string& text, cv::Point org, cv::Scalar color) const
+{
+    cv::putText(frame, text, org, m_fontFace, m_fontScale, color, m_thickness, 8);
 }
 
 }

@@ -15,30 +15,30 @@ JsonSettings::JsonSettings(const std::string& jPath, const std::string& nodeName
         return;
     }
 
-    auto jNodeSettings = m_jSettings[nodeName];
-    if ( jNodeSettings.empty() )
+    m_jNodeSettings = m_jSettings[nodeName];
+    if ( m_jNodeSettings.empty() )
     {
         std::cerr << "[JsonSettings] Could not find " << nodeName << " section" << std::endl;
         return;
     }
         
-    if ( !jNodeSettings["input"].empty() )
-        m_input = static_cast<std::string>(jNodeSettings["input"]);
+    if ( !m_jNodeSettings["input"].empty() )
+        m_input = static_cast<std::string>(m_jNodeSettings["input"]);
         
-    if ( !jNodeSettings["input-size"].empty() )
-        m_inputSize = cvt::parseResolution(jNodeSettings["input-size"]);
+    if ( !m_jNodeSettings["input-size"].empty() )
+        m_inputSize = cvt::parseResolution(m_jNodeSettings["input-size"]);
         
-    if ( !jNodeSettings["record"].empty() )
-        m_record = static_cast<bool>(jNodeSettings["record"]);
+    if ( !m_jNodeSettings["record"].empty() )
+        m_record = static_cast<bool>(m_jNodeSettings["record"]);
         
-    if ( !jNodeSettings["display"].empty() )
-        m_display = static_cast<bool>(jNodeSettings["display"]);
+    if ( !m_jNodeSettings["display"].empty() )
+        m_display = static_cast<bool>(m_jNodeSettings["display"]);
         
-    if ( !jNodeSettings["gpu"].empty() )
-        m_gpu = static_cast<bool>(jNodeSettings["gpu"]);
+    if ( !m_jNodeSettings["gpu"].empty() )
+        m_gpu = static_cast<bool>(m_jNodeSettings["gpu"]);
 
     /* Handle areas */
-    m_areas = cvt::parseAreas(jNodeSettings["areas"], m_inputSize);
+    m_areas = cvt::parseAreas(m_jNodeSettings["areas"], m_inputSize);
     if ( m_areas.empty() )
         m_areas.emplace_back( cvt::createFullScreenArea(m_inputSize) );
 }
