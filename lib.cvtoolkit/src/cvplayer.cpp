@@ -51,6 +51,55 @@ OpenCVPlayer::OpenCVPlayer(const std::string& input, double scaleFactor)
     m_fps = ( m_fps > 120 ) ? 25 : m_fps; // Extremely high FPS appears in the case we cannot obtain real FPS
 }
 
+OpenCVPlayer::OpenCVPlayer(const std::string& input, cv::Size inputSize)
+    : m_input(input)
+    , m_inputSize(inputSize)
+    , m_inputType(getInputType(input))
+{
+    /* Open stream */
+    if ( m_inputType == InputType::WEBCAM )
+    {
+        m_capture.open(input[0] - '0');
+    }
+    else if ( m_inputType == InputType::VIDEO || m_inputType == InputType::LIVESTREAM )
+    {
+        m_capture.open(input);
+    }
+    else if ( m_inputType == InputType::IMAGE )
+    {
+        m_frame0 = cv::imread( input, cv::IMREAD_COLOR );
+        if ( m_frame0.size() != m_inputSize )
+        {
+            cv::resize(m_frame0, m_frame0, m_inputSize);
+        }
+        return;
+    }
+
+    if( !m_capture.isOpened() )
+    {
+        std::cout << ">>> ERROR: Could not initialize capturing..." << std::endl;
+        return;
+    }
+
+    m_capture >> m_frame0;
+    if ( m_frame0.empty() )
+    {
+        std::cout << ">>> ERROR: Could not capture frame" << std::endl;
+        return;
+    }
+
+    m_doResize = (m_frame0.size() != m_inputSize);
+    if ( m_doResize )
+    {
+        cv::resize(m_frame0, m_frame0, m_inputSize);
+    }
+
+    backToStart();
+
+    m_fps = m_capture.get(cv::CAP_PROP_FPS);
+    m_fps = ( m_fps > 120 ) ? 25 : m_fps; // Extremely high FPS appears in the case we cannot obtain real FPS
+}
+
 OpenCVPlayer::~OpenCVPlayer()
 {
     if ( m_writer.isOpened() )
@@ -73,7 +122,7 @@ void OpenCVPlayer::read(cv::Mat& out)
     
     if ( m_doResize && !out.empty() )
     {
-        cv::resize(out, out, cv::Size(0, 0), m_scaleFactor, m_scaleFactor);
+        cv::resize(out, out, m_inputSize, m_scaleFactor, m_scaleFactor);
     }
 }
 
@@ -96,7 +145,9 @@ void OpenCVPlayer::write(const cv::Mat& frame)
         {
             std::cerr << ">>> ERROR: Exception converting image to PNG format: " << ex.what() << std::endl;
         }
-        if ( !good ) std::cerr << ">>> ERROR: Could not save image." << std::endl;
+        if ( !good )
+            std::cerr << ">>> ERROR: Could not save image." << std::endl;
+            
         return;
     }
 

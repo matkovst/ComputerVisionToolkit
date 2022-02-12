@@ -27,6 +27,12 @@ public:
 
     void imshow(cv::Mat& frame, bool record = false);
 
+    cv::Rect drawTransparentBase(cv::Mat& frame, const std::string& underlyingText, int height, 
+                                cv::Point org = {0, 0}, double opacity = 0.3) const;
+
+    void putText(cv::Mat& frame, const std::string& text, cv::Point org,
+                    cv::Scalar color = cv::Scalar(0, 255, 0)) const;
+
     const std::string& WinName() const noexcept;
 
 private:

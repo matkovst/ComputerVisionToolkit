@@ -11,6 +11,41 @@ using json = nlohmann::json;
 namespace cvt
 {
 
+/*! @brief The base class for json settings. Contains general settings.
+*/
+class JsonSettings
+{
+public:
+    JsonSettings(const std::string& jPath, const std::string& nodeName);
+
+    virtual ~JsonSettings() = default;
+
+    std::string summary() const noexcept;
+
+
+    const std::string& input() const noexcept;
+
+    cv::Size inputSize() const noexcept;
+
+    bool record() const noexcept;
+
+    bool display() const noexcept;
+
+    bool gpu() const noexcept;
+
+protected:
+    const json m_jSettings;
+    json m_jNodeSettings;
+
+private:
+    std::string m_input { "0" };
+    cv::Size m_inputSize { 640, 360 };
+    bool m_record { false };
+    bool m_display { true };
+    bool m_gpu { false };
+    Areas m_areas;
+};
+
 static Areas parseAreas(json jAreas, cv::Size2d scale = cv::Size2d(1.0, 1.0))
 {
     if ( jAreas.empty() ) return Areas();

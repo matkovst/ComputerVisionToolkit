@@ -1,0 +1,10 @@
+{
+    "sample-template" : 
+    {
+        "input" : "0",
+        "input-size" : "640x480",
+        "record" : false,
+        "display" : true,
+        "gpu" : false
+    }
+}

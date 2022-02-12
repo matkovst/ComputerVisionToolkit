@@ -25,6 +25,8 @@ public:
 
     OpenCVPlayer(const std::string& input, double scaleFactor = 1.0);
 
+    OpenCVPlayer(const std::string& input, cv::Size inputSize);
+
     ~OpenCVPlayer();
 
     void read(cv::Mat& out);
@@ -52,9 +54,10 @@ public:
     int getInputType(const std::string& input) const;
 
 private:
+    const std::string m_input { "0" };
+    const cv::Size m_inputSize { 0, 0 };
     cv::VideoCapture m_capture;
     cv::VideoWriter m_writer;
-    std::string m_input { "0" };
     int m_inputType { InputType::NONE };
     double m_scaleFactor { 1.0 };
     bool m_doResize { false };
