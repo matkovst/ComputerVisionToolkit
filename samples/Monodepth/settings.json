@@ -1,0 +1,12 @@
+{
+    "dpt-monodepth" : 
+    {
+        "input" : "C:\\Users\\Stanislav\\Pictures\\vlcsnap-2020-05-05-10h27m18s725.png",
+        "input-size" : "640x480",
+        "record" : false,
+        "display" : true,
+        "gpu" : false,
+
+        "model-path" : "../data/DPT/dpt_hybrid-midas-d889a10e-CPU.torchscript"
+    }
+}

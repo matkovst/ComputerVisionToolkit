@@ -28,3 +28,5 @@ add_subdirectory( YOLO-object-detector )
 add_subdirectory( Inception-image-classifier )
 
 add_subdirectory( Illumination-estimation )
+
+add_subdirectory( Monodepth )
