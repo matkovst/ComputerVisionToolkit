@@ -10,6 +10,9 @@ endif()
 # Include OpenCV
 include( ${CMAKE_SOURCE_DIR}/FindOpenCV.txt )
 
+# (optional) LibTorch
+include( ${CMAKE_SOURCE_DIR}/FindLibTorch.txt )
+
 # Include nlohmann
 include_directories( ${CMAKE_SOURCE_DIR}/3rdparty/nlohmann )
 

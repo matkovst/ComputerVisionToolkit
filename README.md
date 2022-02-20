@@ -11,13 +11,17 @@ My personal cross-platform toolkit for doing Image Processing and Intelligent Vi
 - **C++11** ( or higher ) compiler
 - **CMake** >= 3.10
 - **OpenCV** >= 3.0:
-    - ( optional ) with CUDA support
+    - (optional) with CUDA support
+- (optional) **LibTorch**
 
 ## Build & Install
 The whole project can be built with CMake
 
 ```bash
 export OpenCV_DIR=path/to/opencv
+# (optional) export ENABLE_OPENCV_CUDA=ON
+# (optional) export Torch_DIR=path/to/libtorch
+
 mkdir build && cd build
 cmake ..
 make
