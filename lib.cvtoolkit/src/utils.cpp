@@ -229,6 +229,9 @@ void stack4images( const cv::Mat& lt, const cv::Mat& rt, const cv::Mat& lb, cons
 cv::Size parseResolution(const std::string& resol)
 {
     size_t pos = resol.find("x");
+    if (pos == std::string::npos)
+        return cv::Size();
+        
     const int w = std::stoi(resol.substr(0, pos));
     const int h = std::stoi(resol.substr(pos + 1));
     return cv::Size(w, h);

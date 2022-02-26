@@ -318,7 +318,6 @@ int main(int argc, char** argv)
 
     /* Task-specific declarations */
     cv::Mat absoluteDepthMap;
-    cv::TickMeter inferenceTm;
 
     /* Initialize model */
     std::shared_ptr<DPTMonodepth> model = std::make_shared<DPTMonodepth>(jSettings);
