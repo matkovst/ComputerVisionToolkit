@@ -30,3 +30,5 @@ add_subdirectory( Inception-image-classifier )
 add_subdirectory( Illumination-estimation )
 
 add_subdirectory( Monodepth )
+
+add_subdirectory( Shadow-removal )

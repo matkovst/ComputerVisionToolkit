@@ -68,7 +68,7 @@ OpenCVPlayer::OpenCVPlayer(const std::string& input, cv::Size inputSize)
     else if ( m_inputType == InputType::IMAGE )
     {
         m_frame0 = cv::imread( input, cv::IMREAD_COLOR );
-        if ( m_frame0.size() != m_inputSize )
+        if ( !m_inputSize.empty() && m_frame0.size() != m_inputSize )
         {
             cv::resize(m_frame0, m_frame0, m_inputSize);
         }
@@ -88,7 +88,7 @@ OpenCVPlayer::OpenCVPlayer(const std::string& input, cv::Size inputSize)
         return;
     }
 
-    m_doResize = (m_frame0.size() != m_inputSize);
+    m_doResize = (!m_inputSize.empty() && m_frame0.size() != m_inputSize);
     if ( m_doResize )
     {
         cv::resize(m_frame0, m_frame0, m_inputSize);
@@ -120,7 +120,7 @@ void OpenCVPlayer::read(cv::Mat& out)
     m_capture >> out;
     ++m_frameNum;
     
-    if ( m_doResize && !out.empty() )
+    if ( (!m_inputSize.empty() || 1.0 != m_scaleFactor) && m_doResize && !out.empty() )
     {
         cv::resize(out, out, m_inputSize, m_scaleFactor, m_scaleFactor);
     }

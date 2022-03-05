@@ -41,20 +41,20 @@ MACRO(add_example_with_torch NAME)
         CONFIGURATIONS Release
         RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
 
-    if (MSVC)
-        file(GLOB OPENCV_DLLS "${OpenCV_DIR}/../bin/*.dll")
-        add_custom_command(TARGET ${NAME}
-                        POST_BUILD
-                        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                        ${OPENCV_DLLS}
-                        ${CMAKE_SOURCE_DIR}/bin)
-        file(GLOB TORCH_DLLS "${TORCH_INSTALL_PREFIX}/lib/*.dll")
-        add_custom_command(TARGET ${NAME}
-                        POST_BUILD
-                        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                        ${TORCH_DLLS}
-                        ${CMAKE_SOURCE_DIR}/bin)
-    endif (MSVC)
+    # if (MSVC)
+    #     file(GLOB OPENCV_DLLS "${OpenCV_DIR}/../bin/*.dll")
+    #     add_custom_command(TARGET ${NAME}
+    #                     POST_BUILD
+    #                     COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    #                     ${OPENCV_DLLS}
+    #                     ${CMAKE_SOURCE_DIR}/bin)
+    #     file(GLOB TORCH_DLLS "${TORCH_INSTALL_PREFIX}/lib/*.dll")
+    #     add_custom_command(TARGET ${NAME}
+    #                     POST_BUILD
+    #                     COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    #                     ${TORCH_DLLS}
+    #                     ${CMAKE_SOURCE_DIR}/bin)
+    # endif (MSVC)
 
 ENDMACRO()
 
