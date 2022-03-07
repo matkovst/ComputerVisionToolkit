@@ -6,6 +6,24 @@ My personal cross-platform toolkit for doing Image Processing and Intelligent Vi
 - *lib.cvtoolkit* library encapsulating the most common and helpful functions
 - a set of *samples* showing how to implement various computer vision tasks
 
+    <details>
+    <summary>Samples list</summary>
+    <br>
+        <ul>
+            <li>Background subtraction (exponential forgetting, KNN, MOG2)</li>
+            <li>Illumination estimation</li>
+            <li>Image processing (color filters, image derivatives, smoothing, histograms)</li>
+            <li>Inception image classifier</li>
+            <li>Mask RCNN</li>
+            <li>Monodepth</li>
+            <li>Motion detector</li>
+            <li>Optical flow</li>
+            <li>Shadow removal</li>
+            <li>YOLO object detector</li>
+        </ul>
+    <br><br>
+    </details>
+
 ## Requirements
 - **Windows** / **Linux**
 - **C++11** ( or higher ) compiler

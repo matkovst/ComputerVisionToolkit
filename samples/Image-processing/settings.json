@@ -1,0 +1,12 @@
+{
+    "smoothing" : 
+    {
+        "input" : "0",
+        "input-size" : "640x360",
+        "record" : false,
+        "display" : true,
+        "gpu" : false,
+
+        "ksize" : 5
+    }
+}
