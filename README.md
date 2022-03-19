@@ -13,13 +13,13 @@ My personal cross-platform toolkit for doing Image Processing and Intelligent Vi
             <li>Background subtraction (exponential forgetting, KNN, MOG2)</li>
             <li>Illumination estimation</li>
             <li>Image processing (color filters, image derivatives, smoothing, histograms)</li>
-            <li>Inception image classifier</li>
-            <li>Mask RCNN</li>
+            <li>Image classification (InceptionV3, EfficientNet)</li>
+            <li>Semantic segmentation (Mask R-CNN)</li>
+            <li>Object detection (YOLO)</li>
             <li>Monodepth</li>
             <li>Motion detector</li>
             <li>Optical flow</li>
             <li>Shadow removal</li>
-            <li>YOLO object detector</li>
         </ul>
     <br><br>
     </details>

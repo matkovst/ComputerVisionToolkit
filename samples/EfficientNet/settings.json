@@ -1,0 +1,14 @@
+{
+    "efficientnet" : 
+    {
+        "input" : "C:\\Users\\Stanislav\\Pictures\\c8c310d7-3ec1-497f-9597-6017f1bce923.jpg",
+        "input-size" : "640x480",
+        "record" : false,
+        "display" : true,
+        "gpu" : false,
+
+        "model-path" : "..\\data\\EfficientNet\\efficientnet-b0.torchscript",
+        "model-config-path" : "",
+        "model-classes-path" : "..\\data\\EfficientNet\\labels_map.txt"
+    }
+}

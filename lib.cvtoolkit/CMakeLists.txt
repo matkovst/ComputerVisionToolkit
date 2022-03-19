@@ -20,6 +20,9 @@ target_link_libraries( ${PROJECT_NAME} ${OpenCV_LIBS} )
 if (UNIX)
     target_link_libraries( ${PROJECT_NAME} pthread )
 endif()
+if (${TORCH_FOUND})
+    target_link_libraries( ${PROJECT_NAME} ${TORCH_LIBRARIES} )
+endif()
 
 
 install( TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/lib/ )
