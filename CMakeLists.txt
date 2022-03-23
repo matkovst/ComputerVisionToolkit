@@ -8,10 +8,13 @@ if (NOT EXISTS ${CMAKE_BINARY_DIR}/CMakeCache.txt)
 endif()
 
 # Include OpenCV
-include( ${CMAKE_SOURCE_DIR}/FindOpenCV.txt )
+include( ${CMAKE_SOURCE_DIR}/cmake/FindOpenCV.txt )
 
 # (optional) LibTorch
-include( ${CMAKE_SOURCE_DIR}/FindLibTorch.txt )
+include( ${CMAKE_SOURCE_DIR}/cmake/FindLibTorch.txt )
+
+# (optional) OnnxRuntime
+include( ${CMAKE_SOURCE_DIR}/cmake/FindOnnxRuntime.txt )
 
 # Include nlohmann
 include_directories( ${CMAKE_SOURCE_DIR}/3rdparty/nlohmann )

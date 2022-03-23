@@ -25,12 +25,13 @@ My personal cross-platform toolkit for doing Image Processing and Intelligent Vi
     </details>
 
 ## Requirements
-- **Windows** / **Linux**
-- **C++11** ( or higher ) compiler
-- **CMake** >= 3.10
+- **Linux** / **Windows**
+- **C++11** compiler for Linux / **VS 2019** for Windows
+- **CMake** >= 3.18
 - **OpenCV** >= 3.0:
     - (optional) with CUDA support
-- (optional) **LibTorch**
+- (optional) **LibTorch** >= 1.8.2
+- (optional) **ONNX Runtime** >= 1.10.0
 
 ## Build & Install
 The whole project can be built with CMake

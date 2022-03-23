@@ -25,7 +25,8 @@ public:
     enum Engine
     {
         OpenCV,
-        Torch
+        Torch,
+        Onnx
     };
 
     enum Device
@@ -63,17 +64,14 @@ public:
 
     /*! @brief Performes nn inference.
 
-        @param images input image.
-        @param outs output image.
-    */
-    virtual void Infer(const Image& image, Image& out) = 0;
-
-    /*! @brief Performes nn inference.
-
         @param images input images.
         @param outs output images.
     */
-    virtual void Infer(const Images& images, Images& outs) = 0;
+    virtual void Infer(const std::vector<cv::Mat>& images, std::vector<cv::Mat>& outs) = 0;
+
+    /*! @brief Performes nn inference. Overloaded member function.
+    */
+    virtual void Infer(const cv::Mat& image, cv::Mat& out);
 
 protected:
     const InitializeData m_initializeData;

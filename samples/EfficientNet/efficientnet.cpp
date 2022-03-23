@@ -33,6 +33,9 @@ public:
         if ( !m_jNodeSettings["model-path"].empty() )
             m_modelPath = static_cast<std::string>(m_jNodeSettings["model-path"]);
 
+        if ( !m_jNodeSettings["model-engine"].empty() )
+            m_modelEngine = static_cast<std::string>(m_jNodeSettings["model-engine"]);
+
         if ( !m_jNodeSettings["model-config-path"].empty() )
             m_modelConfigPath = static_cast<std::string>(m_jNodeSettings["model-config-path"]);
 
@@ -52,6 +55,7 @@ public:
         std::ostringstream oss;
         oss << std::endl << std::right
             << "\tSPECIFIC SETTINGS: " << std::endl
+            << "\t\t- modelEngine = " << modelEngine() << std::endl
             << "\t\t- modelPath = " << modelPath() << std::endl
             << "\t\t- modelClassesPath = " << modelClassesPath() << std::endl
             << "\t\t- modelConfigPath = " << modelConfigPath();
@@ -63,6 +67,11 @@ public:
     const std::string& modelPath() const noexcept
     {
         return m_modelPath;
+    }
+
+    const std::string& modelEngine() const noexcept
+    {
+        return m_modelEngine;
     }
 
     const std::string& modelConfigPath() const noexcept
@@ -91,6 +100,7 @@ public:
     }
 
 private:
+    std::string m_modelEngine { "" };
     std::string m_modelPath { "" };
     std::string m_modelConfigPath { "" };
     std::string m_modelClassesPath { "" };
@@ -134,21 +144,32 @@ int main(int argc, char** argv)
     const double fps = player->fps();
 
     /* Task-specific declarations */
+    int engine = cvt::NeuralNetwork::Engine::OpenCV;
+    if (jSettings->modelEngine() == "torch")
+        engine = cvt::NeuralNetwork::Engine::Torch;
+    else if (jSettings->modelEngine() == "onnx")
+        engine = cvt::NeuralNetwork::Engine::Onnx;
     cvt::NeuralNetwork::InitializeData modelInitData
     {
         jSettings->modelPath(),
         jSettings->modelConfigPath(),
         jSettings->modelClassesPath(),
         cv::Size(),
-        cvt::NeuralNetwork::Engine::Torch,
+        engine,
         cvt::NeuralNetwork::Device::Cpu
     };
     std::shared_ptr<cvt::NeuralNetwork> model = cvt::createEfficientNet(modelInitData);
+    if ( !model )
+    {
+        std::cerr << "[" << TitleName << "] Could not load model." 
+                  << " Probably chosen engine \"" << jSettings->modelEngine()
+                  << "\" is not supported." << std::endl;
+        return -1;
+    }
     const auto labelsMap = cvt::loadJsonLabelsMap(jSettings->modelClassesPath());
 
     /* Main loop */
-    cv::Mat frame, out;
-    cvt::Image modelOutput;
+    cv::Mat frame, modelOutput, out;
     std::shared_ptr<cv::Mat> detailedFramePtr;
     if ( jSettings->display() )
     {
@@ -205,29 +226,24 @@ int main(int argc, char** argv)
                     cv::cvtColor(out, out, cv::COLOR_GRAY2BGR);
                 }
 
+                /* Sort predictions by desc */
+                cv::Mat sortedOut, sortedOutIdx;
+                cv::sort(modelOutput, sortedOut, cv::SORT_EVERY_ROW + cv::SORT_DESCENDING);
+                cv::sortIdx(modelOutput, sortedOutIdx, cv::SORT_EVERY_ROW + cv::SORT_DESCENDING);
+
+                /* Draw top K predictions */
+                const int k = 5;
+                const cv::Point offset(0, -25);
+                cv::Point org(5, out.rows - 35);
+                for (int i = k-1; i >= 0; --i, org += offset)
                 {
-                    cv::Mat matImage;
-                    cvt::imageToMat(modelOutput, matImage, true);
-
-                    /* Sort predictions by desc */
-                    cv::Mat sortedOut, sortedOutIdx;
-                    cv::sort(matImage, sortedOut, cv::SORT_EVERY_ROW + cv::SORT_DESCENDING);
-                    cv::sortIdx(matImage, sortedOutIdx, cv::SORT_EVERY_ROW + cv::SORT_DESCENDING);
-
-                    /* Draw top K predictions */
-                    const int k = 5;
-                    const cv::Point offset(0, -25);
-                    cv::Point org(5, out.rows - 35);
-                    for (int i = k-1; i >= 0; --i, org += offset)
-                    {
-                        const int idx = sortedOutIdx.at<int>(i);
-                        const float prob = sortedOut.at<float>(i) * 100.0f;
-                        const std::string text = "#" + std::to_string(idx) + 
-                                                " " + labelsMap.at(idx) + 
-                                                " (" + cv::format("%.2f", prob) +
-                                                "%)";
-                        gui.putText(out, text, org, cv::Scalar(0, 255, 0));
-                    }
+                    const int idx = sortedOutIdx.at<int>(i);
+                    const float prob = sortedOut.at<float>(i) * 100.0f;
+                    const std::string text = "#" + std::to_string(idx) + 
+                                            " " + labelsMap.at(idx) + 
+                                            " (" + cv::format("%.2f", prob) +
+                                            "%)";
+                    gui.putText(out, text, org, cv::Scalar(0, 255, 0));
                 }
                 
                 gui.imshow(out, jSettings->record());

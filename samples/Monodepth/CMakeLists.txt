@@ -2,8 +2,8 @@ cmake_minimum_required( VERSION 3.10 )
 project( Monodepth )
 
 # Include OpenCV
-include( ${CMAKE_SOURCE_DIR}/FindOpenCV.txt )
-include( ${CMAKE_SOURCE_DIR}/FindLibTorch.txt )
+include( ${CMAKE_SOURCE_DIR}/cmake/FindOpenCV.txt )
+include( ${CMAKE_SOURCE_DIR}/cmake/FindLibTorch.txt )
 
 MACRO(add_example_with_torch NAME)
     add_executable( ${NAME} ${NAME}.cpp )

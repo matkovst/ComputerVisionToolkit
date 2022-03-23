@@ -1,8 +1,42 @@
 #include <opencv2/imgproc.hpp>
+#include <opencv2/dnn.hpp>
+#include "cvtoolkit/utils.hpp"
 #include "cvtoolkit/nn/efficientnet.hpp"
 
 namespace cvt
 {
+
+template <typename T>
+T vectorProduct(const std::vector<T>& v)
+{
+    T res = 1;
+    for (int i = 1; i < v.size(); ++i)
+        res *= v.at(i);
+    return res;
+}
+
+/**
+ * @brief Operator overloading for printing vectors
+ * @tparam T
+ * @param os
+ * @param v
+ * @return std::ostream&
+ */
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const std::vector<T>& v)
+{
+    os << "[";
+    for (int i = 0; i < v.size(); ++i)
+    {
+        os << v[i];
+        if (i != v.size() - 1)
+        {
+            os << ", ";
+        }
+    }
+    os << "]";
+    return os;
+}
 
 #ifdef TORCH_FOUND
 
@@ -41,7 +75,7 @@ EfficientNet_Torch::EfficientNet_Torch(const InitializeData& initializeData)
             m_model = torch::jit::load(initializeData.modelPath, m_device);
             m_model.to(m_device);
             m_model.eval();
-            m_modelInitialized = true;
+            m_initialized = true;
 
             loadModelTm.stop();
             std::cout << "[EfficientNet_Torch] Model loading took " << loadModelTm.getAvgTimeMilli() << "ms" << std::endl;
@@ -57,7 +91,7 @@ EfficientNet_Torch::EfficientNet_Torch(const InitializeData& initializeData)
     }
 
     /* Warmup model */
-    if (m_modelInitialized)
+    if (m_initialized)
     {
         try
         {
@@ -69,12 +103,9 @@ EfficientNet_Torch::EfficientNet_Torch(const InitializeData& initializeData)
                                     ? cv::Size(224, 224) 
                                     : initializeData.modelInputSize;
             const cv::Mat ones = cv::Mat::zeros(inputSize, CV_8UC3) + cv::Scalar::all(1);
-            cvt::Image out;
 
-            Infer(ones, out);
-
-            cv::Mat pred;
-            imageToMat(out, pred, true);
+            cv::Mat out;
+            NeuralNetwork::Infer(ones, out);
                 
             warmupTm.stop();
 
@@ -88,17 +119,14 @@ EfficientNet_Torch::EfficientNet_Torch(const InitializeData& initializeData)
     }
 }
 
-void EfficientNet_Torch::Infer(const Image& image, Image& out)
+void EfficientNet_Torch::Infer(const std::vector<cv::Mat>& images, std::vector<cv::Mat>& outs)
 {
-    Images outs;
-    Infer({image}, outs);
-    out = outs.at(0);
-}
-
-void EfficientNet_Torch::Infer(const Images& images, Images& outs)
-{
-    if ( !m_modelInitialized )
+    if ( !m_initialized )
         return;
+    if ( !outs.empty() )
+        outs.clear();
+
+    m_inputs.clear();
 
     preprocess(images, m_inputs);
 
@@ -111,11 +139,8 @@ void EfficientNet_Torch::Infer(const Images& images, Images& outs)
     postprocess(m_outs, outs);
 }
 
-void EfficientNet_Torch::preprocess(const Images& images, std::vector<torch::jit::IValue>& out)
+void EfficientNet_Torch::preprocess(const std::vector<cv::Mat>& images, std::vector<torch::jit::IValue>& out)
 {
-    if ( !out.empty() )
-        out.clear();
-
     std::vector<torch::Tensor> inputTensor(images.size());
     for (int i = 0; i < images.size(); ++i)
     {
@@ -123,11 +148,14 @@ void EfficientNet_Torch::preprocess(const Images& images, std::vector<torch::jit
         auto& tensorImage = inputTensor.at(i);
 
         cv::Mat matImage, matImage32f;
-        imageToMat(image, matImage, true);
 
         // Resize
-        if (!m_initializeData.modelInputSize.empty() && m_initializeData.modelInputSize != matImage.size())
+        const bool doResize = (!m_initializeData.modelInputSize.empty() 
+                                && m_initializeData.modelInputSize != image.size());
+        if (doResize)
             cv::resize(matImage, matImage, m_initializeData.modelInputSize, 0.0, 0.0, cv::INTER_CUBIC);
+        else
+            matImage = image.clone();
 
         // Convert color
         cv::cvtColor(matImage, matImage, cv::COLOR_BGR2RGB);
@@ -148,11 +176,8 @@ void EfficientNet_Torch::preprocess(const Images& images, std::vector<torch::jit
     out.emplace_back(m_inputTensor.to(m_device));
 }
 
-void EfficientNet_Torch::postprocess(const torch::Tensor &in, Images& out)
+void EfficientNet_Torch::postprocess(const torch::Tensor &in, std::vector<cv::Mat>& outs)
 {
-    if ( !out.empty() )
-        out.clear();
-    
     /* Sotfmax & make output */
     const auto sizes = in.sizes();
     const int nImages = static_cast<int>(sizes[0]);
@@ -162,7 +187,7 @@ void EfficientNet_Torch::postprocess(const torch::Tensor &in, Images& out)
         const auto& batch = in.select(0, i);
         const auto softmaxed = torch::softmax(batch, 0);
         const cv::Mat outMat = cv::Mat(1, nLabels, CV_32F, softmaxed.data_ptr());
-        out.emplace_back(outMat.clone());
+        outs.emplace_back(outMat.clone());
     }
 
     // /* Get top K predictions */
@@ -174,18 +199,299 @@ void EfficientNet_Torch::postprocess(const torch::Tensor &in, Images& out)
 
 #endif
 
+
+#ifdef ONNXRUNTIME_FOUND
+
+
+
+/**
+ * @brief Print ONNX tensor data type
+ * https://github.com/microsoft/onnxruntime/blob/rel-1.6.0/include/onnxruntime/core/session/onnxruntime_c_api.h#L93
+ * @param os
+ * @param type
+ * @return std::ostream&
+ */
+std::ostream& operator<<(std::ostream& os,
+                         const ONNXTensorElementDataType& type)
+{
+    switch (type)
+    {
+        case ONNXTensorElementDataType::ONNX_TENSOR_ELEMENT_DATA_TYPE_UNDEFINED:
+            os << "undefined";
+            break;
+        case ONNXTensorElementDataType::ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT:
+            os << "float";
+            break;
+        case ONNXTensorElementDataType::ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT8:
+            os << "uint8_t";
+            break;
+        case ONNXTensorElementDataType::ONNX_TENSOR_ELEMENT_DATA_TYPE_INT8:
+            os << "int8_t";
+            break;
+        case ONNXTensorElementDataType::ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT16:
+            os << "uint16_t";
+            break;
+        case ONNXTensorElementDataType::ONNX_TENSOR_ELEMENT_DATA_TYPE_INT16:
+            os << "int16_t";
+            break;
+        case ONNXTensorElementDataType::ONNX_TENSOR_ELEMENT_DATA_TYPE_INT32:
+            os << "int32_t";
+            break;
+        case ONNXTensorElementDataType::ONNX_TENSOR_ELEMENT_DATA_TYPE_INT64:
+            os << "int64_t";
+            break;
+        case ONNXTensorElementDataType::ONNX_TENSOR_ELEMENT_DATA_TYPE_STRING:
+            os << "std::string";
+            break;
+        case ONNXTensorElementDataType::ONNX_TENSOR_ELEMENT_DATA_TYPE_BOOL:
+            os << "bool";
+            break;
+        case ONNXTensorElementDataType::ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16:
+            os << "float16";
+            break;
+        case ONNXTensorElementDataType::ONNX_TENSOR_ELEMENT_DATA_TYPE_DOUBLE:
+            os << "double";
+            break;
+        case ONNXTensorElementDataType::ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT32:
+            os << "uint32_t";
+            break;
+        case ONNXTensorElementDataType::ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT64:
+            os << "uint64_t";
+            break;
+        case ONNXTensorElementDataType::ONNX_TENSOR_ELEMENT_DATA_TYPE_COMPLEX64:
+            os << "float real + float imaginary";
+            break;
+        case ONNXTensorElementDataType::
+            ONNX_TENSOR_ELEMENT_DATA_TYPE_COMPLEX128:
+            os << "double real + float imaginary";
+            break;
+        case ONNXTensorElementDataType::ONNX_TENSOR_ELEMENT_DATA_TYPE_BFLOAT16:
+            os << "bfloat16";
+            break;
+        default:
+            break;
+    }
+
+    return os;
+}
+
+EfficientNet_Onnx::EfficientNet_Onnx(const InitializeData& initializeData)
+    : NeuralNetwork(initializeData)
+{
+    Ort::Env env(OrtLoggingLevel::ORT_LOGGING_LEVEL_WARNING, "EfficientNet_Onnx");
+    Ort::SessionOptions sessionOptions;
+    sessionOptions.SetInterOpNumThreads(1);
+
+    // Sets graph optimization level
+    // Available levels are
+    // ORT_DISABLE_ALL -> To disable all optimizations
+    // ORT_ENABLE_BASIC -> To enable basic optimizations (Such as redundant node
+    // removals) ORT_ENABLE_EXTENDED -> To enable extended optimizations
+    // (Includes level 1 + more complex optimizations like node fusions)
+    // ORT_ENABLE_ALL -> To Enable All possible optimizations
+    sessionOptions.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_EXTENDED);
+
+    /* Load model */
+    if ( !initializeData.modelPath.empty() )
+    {
+        try 
+        {
+            cv::TickMeter loadModelTm;
+            loadModelTm.start();
+
+            m_session = Ort::Session(env, initializeData.modelPath.c_str(), sessionOptions);
+
+            loadModelTm.stop();
+            std::cout << "[EfficientNet_Onnx] Model loading took " << loadModelTm.getAvgTimeMilli() << "ms" << std::endl;
+
+
+            /* Derive model detailed info */
+            
+            m_modelInfo.numInputNodes = m_session.GetInputCount();
+            m_modelInfo.numOutputNodes = m_session.GetOutputCount();
+
+            m_modelInfo.inputName = m_session.GetInputName(0, m_allocator);
+            const Ort::TypeInfo inputTypeInfo = m_session.GetInputTypeInfo(0);
+            const auto inputTensorInfo = inputTypeInfo.GetTensorTypeAndShapeInfo();
+            m_modelInfo.inputType = inputTensorInfo.GetElementType();
+            m_modelInfo.inputDims = inputTensorInfo.GetShape();
+
+            m_modelInfo.outputName = m_session.GetOutputName(0, m_allocator);
+            const Ort::TypeInfo outputTypeInfo = m_session.GetOutputTypeInfo(0);
+            const auto outputTensorInfo = outputTypeInfo.GetTensorTypeAndShapeInfo();
+            m_modelInfo.outputType = outputTensorInfo.GetElementType();
+            m_modelInfo.outputDims = outputTensorInfo.GetShape();
+
+            if (m_modelInfo.inputDims.size() > 2)
+                if (-1 != m_modelInfo.inputDims.at(1) && -1 != m_modelInfo.inputDims.at(2))
+                    m_inputSize = {
+                        static_cast<int>(m_modelInfo.inputDims.at(2)), 
+                        static_cast<int>(m_modelInfo.inputDims.at(3))
+                        };
+            m_inputNames.emplace_back(m_modelInfo.inputName);
+            m_outputNames.emplace_back(m_modelInfo.outputName);
+            m_initialized = true;
+
+            /* Print model detailed info */
+
+            std::ostringstream infoSs;
+            infoSs << std::endl << std::right
+                << "[EfficientNet_Onnx] Model info: " << std::endl
+                << "\t- Number of Input Nodes = " << m_modelInfo.numInputNodes << std::endl
+                << "\t- Input Name = " << m_modelInfo.inputName << std::endl
+                << "\t- Input Type = " << m_modelInfo.inputType << std::endl
+                << "\t- Input Dimensions = " << m_modelInfo.inputDims << std::endl
+                << "\t- Number of Output Nodes = " << m_modelInfo.numOutputNodes << std::endl
+                << "\t- Output Name = " << m_modelInfo.outputName << std::endl
+                << "\t- Output Type = " << m_modelInfo.outputType << std::endl
+                << "\t- Output Dimensions = " << m_modelInfo.outputDims;
+            std::cout << infoSs.str() << std::endl;
+        }
+        catch (const torch::Error& e) 
+        {
+            std::cerr << "[EfficientNet_Onnx] Error loading the model:\n" << e.what();
+        }
+    }
+    else
+    {
+        std::cout << "[EfficientNet_Onnx] Error loading the model: Model path is empty " << std::endl;
+    }
+
+    /* Warmup model */
+    if (m_initialized)
+    {
+        try
+        {
+            cv::TickMeter warmupTm;
+            warmupTm.start();
+
+            /* Make input */
+            const cv::Mat ones = cv::Mat::zeros(m_inputSize, CV_8UC3) + cv::Scalar::all(1);
+
+            cv::Mat out;
+            NeuralNetwork::Infer(ones, out);
+                
+            warmupTm.stop();
+
+            std::cout << "[EfficientNet_Torch] Model warming up took " 
+                      << warmupTm.getAvgTimeMilli() << "ms" << std::endl;
+        }
+        catch(const torch::Error& e)
+        {
+            std::cout << "[EfficientNet_Torch] Error warming up the model:\n" << e.what();
+        }
+    }
+}
+
+void EfficientNet_Onnx::Infer(const std::vector<cv::Mat>& images, std::vector<cv::Mat>& outs)
+{
+    if ( !m_initialized )
+        return;
+    if ( !outs.empty() )
+        outs.clear();
+
+    m_inputData.clear();
+    m_outputData.clear();
+
+    preprocess(images, m_inputData, m_outputData);
+
+    m_session.Run(Ort::RunOptions{nullptr}, m_inputNames.data(),
+                m_inputData.tensors.data(), 1, m_outputNames.data(),
+                m_outputData.tensors.data(), 1);
+
+    postprocess(m_outputData, outs);
+}
+
+void EfficientNet_Onnx::preprocess(const std::vector<cv::Mat>& images, OrtData& inputData, OrtData& outputData)
+{
+    std::vector<int64_t> inputDims, outputDims;
+    std::copy(m_modelInfo.inputDims.begin(), m_modelInfo.inputDims.end(),
+              std::back_inserter(inputDims));
+    inputDims[0] = images.size();
+    std::copy(m_modelInfo.outputDims.begin(), m_modelInfo.outputDims.end(),
+              std::back_inserter(outputDims));
+    outputDims[0] = images.size();
+
+    for (const auto& image : images)
+    {
+        cv::Mat matImage, matImage32f, blob;
+
+        // Resize
+        const bool doResize = (!m_inputSize.empty() && m_inputSize != image.size());
+        if (doResize)
+            cv::resize(image, matImage, m_inputSize, 0.0, 0.0, cv::INTER_CUBIC);
+        else
+            matImage = image.clone();
+
+        // Convert color
+        cv::cvtColor(matImage, matImage, cv::COLOR_BGR2RGB);
+
+        // Normalize
+        matImage.convertTo(matImage32f, CV_32FC3, 0.003921569);
+        matImage32f = (matImage32f - EfficientNet::mean) / EfficientNet::std;
+
+        // HWC -> NCHW
+        cv::dnn::blobFromImage(matImage32f, blob);
+
+        const size_t inputTensorSize = vectorProduct(inputDims);
+        inputData.tensorsValues.resize(inputTensorSize);
+        inputData.tensorsValues.assign(blob.begin<float>(), blob.end<float>());
+
+        const size_t outputTensorSize = vectorProduct(outputDims);
+        assert(("[EfficientNet_Onnx] Output tensor size should equal to the label set size.",
+                labels.size() == outputTensorSize));
+        outputData.tensorsValues.resize(outputTensorSize);
+
+        Ort::MemoryInfo memoryInfo = Ort::MemoryInfo::CreateCpu(
+            OrtAllocatorType::OrtArenaAllocator, OrtMemType::OrtMemTypeDefault);
+        inputData.tensors.emplace_back(Ort::Value::CreateTensor<float>(
+            memoryInfo, inputData.tensorsValues.data(), inputTensorSize, 
+            inputDims.data(), inputDims.size()));
+        outputData.tensors.emplace_back(Ort::Value::CreateTensor<float>(
+            memoryInfo, outputData.tensorsValues.data(), outputTensorSize,
+            outputDims.data(), outputDims.size()));
+    }
+}
+
+void EfficientNet_Onnx::postprocess(const OrtData& inputData, std::vector<cv::Mat>& outputs) const
+{
+    const int nImages = inputData.tensors.size();
+    const int nLabels = inputData.tensorsValues.size();
+    outputs.resize(nImages);
+    for (int i = 0; i < nImages; ++i)
+    {
+        auto& iOutput = outputs.at(i);
+        const cv::Mat outMat = cv::Mat(1, nLabels, CV_32F, (void*)inputData.tensorsValues.data());
+        cv::exp(outMat, iOutput);
+        cv::divide(iOutput, cv::sum(iOutput)[0], iOutput);
+    }
+}
+
+#endif
+
+
 std::shared_ptr<NeuralNetwork> createEfficientNet(const NeuralNetwork::InitializeData& initializeData)
 {
     switch (initializeData.engine)
     {
+
     case NeuralNetwork::Engine::OpenCV: // TODO
         return nullptr;
+
     case NeuralNetwork::Engine::Torch:
 #ifdef TORCH_FOUND
         return std::make_shared<EfficientNet_Torch>(initializeData);
 #else
         return nullptr;
 #endif
+
+    case NeuralNetwork::Engine::Onnx:
+#ifdef ONNXRUNTIME_FOUND
+        return std::make_shared<EfficientNet_Onnx>(initializeData);
+#else
+        return nullptr;
+#endif
+
     default:
         return nullptr;
     }
