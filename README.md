@@ -25,8 +25,7 @@ My personal cross-platform toolkit for doing Image Processing and Intelligent Vi
     </details>
 
 ## Requirements
-- **Linux** / **Windows**
-- **C++11** compiler for Linux / **VS 2019** for Windows
+- **GCC 9.3.0** compiler <ins>for Linux</ins> / **VS 2019** <ins>for Windows</ins>
 - **CMake** >= 3.18
 - **OpenCV** >= 3.0:
     - (optional) with CUDA support
@@ -34,17 +33,34 @@ My personal cross-platform toolkit for doing Image Processing and Intelligent Vi
 - (optional) **ONNX Runtime** >= 1.10.0
 
 ## Build & Install
+
+### With CMake
+
 The whole project can be built with CMake
 
 ```bash
 export OpenCV_DIR=path/to/opencv
 # (optional) export ENABLE_OPENCV_CUDA=ON
 # (optional) export Torch_DIR=path/to/libtorch
+# (optional) export Onnxruntime_DIR=path/to/onnxruntime
 
 mkdir build && cd build
 cmake ..
 make
 make install
+```
+
+### With VS Code
+
+Add this to *.vscode/settings.json*
+
+```bash
+"cmake.configureSettings": 
+{
+    "OpenCV_DIR": "path/to/OpenCVConfig.cmake",
+    "Torch_DIR": "path/to/TorchConfig.cmake",
+    "Onnxruntime_DIR": "path/to/onnxruntime",
+}
 ```
 
 ## Run

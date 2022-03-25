@@ -18,95 +18,26 @@ const cv::String argKeys =
         "{ @json j        |        | path to json }"
         ;
 
-class EfficientNetSettings final : public cvt::JsonSettings
+class EfficientNetSettings final : public cvt::JsonSettings, public cvt::JsonModelSettings
 {
 public:
     EfficientNetSettings(const std::string& jPath, const std::string& nodeName)
         : JsonSettings(jPath, nodeName)
+        , JsonModelSettings(jPath, nodeName)
     {
         if ( m_jNodeSettings.empty() )
         {
             std::cerr << "[EfficientNetSettings] Could not find " << nodeName << " section" << std::endl;
             return;
         }
-
-        if ( !m_jNodeSettings["model-path"].empty() )
-            m_modelPath = static_cast<std::string>(m_jNodeSettings["model-path"]);
-
-        if ( !m_jNodeSettings["model-engine"].empty() )
-            m_modelEngine = static_cast<std::string>(m_jNodeSettings["model-engine"]);
-
-        if ( !m_jNodeSettings["model-config-path"].empty() )
-            m_modelConfigPath = static_cast<std::string>(m_jNodeSettings["model-config-path"]);
-
-        if ( !m_jNodeSettings["model-classes-path"].empty() )
-            m_modelClassesPath = static_cast<std::string>(m_jNodeSettings["model-classes-path"]);
-
-        if ( !m_jNodeSettings["model-input-height"].empty() )
-            m_modelInputHeight = static_cast<int>(m_jNodeSettings["model-input-height"]);
-
-        m_modelInputSize = {m_modelInputWidth, m_modelInputHeight};
     }
 
     ~EfficientNetSettings() = default;
 
     std::string summary() const noexcept
     {
-        std::ostringstream oss;
-        oss << std::endl << std::right
-            << "\tSPECIFIC SETTINGS: " << std::endl
-            << "\t\t- modelEngine = " << modelEngine() << std::endl
-            << "\t\t- modelPath = " << modelPath() << std::endl
-            << "\t\t- modelClassesPath = " << modelClassesPath() << std::endl
-            << "\t\t- modelConfigPath = " << modelConfigPath();
-
-        return JsonSettings::summary() + oss.str();
+        return JsonSettings::summary() + JsonModelSettings::summary();
     }
-
-
-    const std::string& modelPath() const noexcept
-    {
-        return m_modelPath;
-    }
-
-    const std::string& modelEngine() const noexcept
-    {
-        return m_modelEngine;
-    }
-
-    const std::string& modelConfigPath() const noexcept
-    {
-        return m_modelConfigPath;
-    }
-
-    const std::string& modelClassesPath() const noexcept
-    {
-        return m_modelClassesPath;
-    }
-
-    int modelInputWidth() const noexcept
-    {
-        return m_modelInputWidth;
-    }
-
-    int modelInputHeight() const noexcept
-    {
-        return m_modelInputHeight;
-    }
-
-    cv::Size modelInputSize() const noexcept
-    {
-        return m_modelInputSize;
-    }
-
-private:
-    std::string m_modelEngine { "" };
-    std::string m_modelPath { "" };
-    std::string m_modelConfigPath { "" };
-    std::string m_modelClassesPath { "" };
-    int m_modelInputWidth { 224 };
-    int m_modelInputHeight { 224 };
-    cv::Size m_modelInputSize;
 };
 
 
@@ -159,7 +90,7 @@ int main(int argc, char** argv)
         cvt::NeuralNetwork::Device::Cpu
     };
     std::shared_ptr<cvt::NeuralNetwork> model = cvt::createEfficientNet(modelInitData);
-    if ( !model )
+    if ( !(model && model->initialized()) )
     {
         std::cerr << "[" << TitleName << "] Could not load model." 
                   << " Probably chosen engine \"" << jSettings->modelEngine()
@@ -167,6 +98,18 @@ int main(int argc, char** argv)
         return -1;
     }
     const auto labelsMap = cvt::loadJsonLabelsMap(jSettings->modelClassesPath());
+
+    const cvt::NeuralNetwork::PreprocessData preprocessData = {
+        jSettings->modelPreprocessingSize(),
+        jSettings->modelPreprocessingColorConvMode(),
+        jSettings->modelPreprocessingScale(),
+        jSettings->modelPreprocessingMean(),
+        jSettings->modelPreprocessingStd()
+    };
+
+    const cvt::NeuralNetwork::PostprocessData postprocessData = {
+        jSettings->modelPostprocessingSotfmax()
+    };
 
     /* Main loop */
     cv::Mat frame, modelOutput, out;
@@ -199,7 +142,7 @@ int main(int argc, char** argv)
         {
             auto m = metrics->measure();
 
-            model->Infer(frame, modelOutput);
+            model->Infer(frame, modelOutput, preprocessData, postprocessData);
         }
 
         /* Display info */

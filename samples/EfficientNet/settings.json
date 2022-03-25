@@ -10,6 +10,14 @@
         "model-engine" : "torch",
         "model-path" : "..\\data\\EfficientNet\\efficientnet-b0.torchscript",
         "model-config-path" : "",
-        "model-classes-path" : "..\\data\\EfficientNet\\labels_map.txt"
+        "model-classes-path" : "..\\data\\EfficientNet\\labels_map.txt",
+
+        "model-preprocessing-size" : "224x224",
+        "model-preprocessing-color-code" : "rgb",
+        "model-preprocessing-scale" : 1.0,
+        "model-preprocessing-mean" : [0.0, 0.0, 0.0],
+        "model-preprocessing-std" : [1.0, 1.0, 1.0],
+
+        "model-postprocessing-softmax" : false
     }
 }

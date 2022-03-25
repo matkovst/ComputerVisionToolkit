@@ -2,7 +2,7 @@ cmake_minimum_required( VERSION 3.10 )
 project( Movement-detector )
 
 # Include OpenCV
-include( ${CMAKE_SOURCE_DIR}/cmake/FindOpenCV.txt )
+include( ${CMAKE_SOURCE_DIR}/cmake/FindOpenCV.cmake )
 
 MACRO(add_example NAME)
     add_executable( ${NAME} ${NAME}.cpp )

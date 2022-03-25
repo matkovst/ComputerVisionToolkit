@@ -1,3 +1,4 @@
+#include <cassert>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/dnn.hpp>
 #include "cvtoolkit/utils.hpp"
@@ -10,7 +11,7 @@ template <typename T>
 T vectorProduct(const std::vector<T>& v)
 {
     T res = 1;
-    for (int i = 1; i < v.size(); ++i)
+    for (int i = 0; i < v.size(); ++i)
         res *= v.at(i);
     return res;
 }
@@ -119,7 +120,9 @@ EfficientNet_Torch::EfficientNet_Torch(const InitializeData& initializeData)
     }
 }
 
-void EfficientNet_Torch::Infer(const std::vector<cv::Mat>& images, std::vector<cv::Mat>& outs)
+void EfficientNet_Torch::Infer(const std::vector<cv::Mat>& images, std::vector<cv::Mat>& outs, 
+                                const PreprocessData& preprocessData,
+                                const PostprocessData& postprocessData)
 {
     if ( !m_initialized )
         return;
@@ -201,8 +204,6 @@ void EfficientNet_Torch::postprocess(const torch::Tensor &in, std::vector<cv::Ma
 
 
 #ifdef ONNXRUNTIME_FOUND
-
-
 
 /**
  * @brief Print ONNX tensor data type
@@ -347,7 +348,7 @@ EfficientNet_Onnx::EfficientNet_Onnx(const InitializeData& initializeData)
                 << "\t- Output Dimensions = " << m_modelInfo.outputDims;
             std::cout << infoSs.str() << std::endl;
         }
-        catch (const torch::Error& e) 
+        catch (const std::exception& e) 
         {
             std::cerr << "[EfficientNet_Onnx] Error loading the model:\n" << e.what();
         }
@@ -373,17 +374,19 @@ EfficientNet_Onnx::EfficientNet_Onnx(const InitializeData& initializeData)
                 
             warmupTm.stop();
 
-            std::cout << "[EfficientNet_Torch] Model warming up took " 
+            std::cout << "[EfficientNet_Onnx] Model warming up took " 
                       << warmupTm.getAvgTimeMilli() << "ms" << std::endl;
         }
-        catch(const torch::Error& e)
+        catch(const std::exception& e)
         {
-            std::cout << "[EfficientNet_Torch] Error warming up the model:\n" << e.what();
+            std::cout << "[EfficientNet_Onnx] Error warming up the model:\n" << e.what();
         }
     }
 }
 
-void EfficientNet_Onnx::Infer(const std::vector<cv::Mat>& images, std::vector<cv::Mat>& outs)
+void EfficientNet_Onnx::Infer(const std::vector<cv::Mat>& images, std::vector<cv::Mat>& outs, 
+                                const PreprocessData& preprocessData,
+                                const PostprocessData& postprocessData)
 {
     if ( !m_initialized )
         return;
@@ -393,28 +396,46 @@ void EfficientNet_Onnx::Infer(const std::vector<cv::Mat>& images, std::vector<cv
     m_inputData.clear();
     m_outputData.clear();
 
-    preprocess(images, m_inputData, m_outputData);
+    preprocess(images, m_inputData, m_outputData, preprocessData);
 
     m_session.Run(Ort::RunOptions{nullptr}, m_inputNames.data(),
-                m_inputData.tensors.data(), 1, m_outputNames.data(),
-                m_outputData.tensors.data(), 1);
+                m_inputData.tensor.data(), 1, m_outputNames.data(),
+                m_outputData.tensor.data(), 1);
 
-    postprocess(m_outputData, outs);
+    postprocess(m_outputData, outs, images.size(), postprocessData);
 }
 
-void EfficientNet_Onnx::preprocess(const std::vector<cv::Mat>& images, OrtData& inputData, OrtData& outputData)
+void EfficientNet_Onnx::preprocess(const std::vector<cv::Mat>& images, OrtData& inputData, OrtData& outputData, 
+                                    const PreprocessData& preprocessData)
 {
-    std::vector<int64_t> inputDims, outputDims;
-    std::copy(m_modelInfo.inputDims.begin(), m_modelInfo.inputDims.end(),
-              std::back_inserter(inputDims));
-    inputDims[0] = images.size();
-    std::copy(m_modelInfo.outputDims.begin(), m_modelInfo.outputDims.end(),
-              std::back_inserter(outputDims));
-    outputDims[0] = images.size();
+    assert(("[EfficientNet_Onnx][preprocess] Got 0 images.", !images.empty()));
 
-    for (const auto& image : images)
+    Ort::MemoryInfo memoryInfo = Ort::MemoryInfo::CreateCpu(
+                                    OrtAllocatorType::OrtArenaAllocator, 
+                                    OrtMemType::OrtMemTypeDefault);
+
+    const size_t nImages = images.size();
+    std::vector<int64_t> input0Dims, output0Dims;
+    std::copy(m_modelInfo.inputDims.begin(), m_modelInfo.inputDims.end(),
+              std::back_inserter(input0Dims));
+    input0Dims[0] = nImages;
+    std::copy(m_modelInfo.outputDims.begin(), m_modelInfo.outputDims.end(),
+              std::back_inserter(output0Dims));
+    output0Dims[0] = nImages;
+
+    const size_t inputTensorSize = vectorProduct(input0Dims);
+    const size_t outputTensorSize = vectorProduct(output0Dims);
+    inputData.tensorValues.resize(inputTensorSize);
+    outputData.tensorValues.resize(outputTensorSize);
+
+    /* Pre-process input images */
+    std::vector<cv::Mat> preprocessedImages(nImages);
+    cv::Mat blobs;
+    for (int i = 0; i < nImages; ++i)
     {
-        cv::Mat matImage, matImage32f, blob;
+        const auto& image = images.at(i);
+        auto& preprocessedImage = preprocessedImages.at(i);
+        cv::Mat matImage, blob;
 
         // Resize
         const bool doResize = (!m_inputSize.empty() && m_inputSize != image.size());
@@ -424,46 +445,55 @@ void EfficientNet_Onnx::preprocess(const std::vector<cv::Mat>& images, OrtData& 
             matImage = image.clone();
 
         // Convert color
-        cv::cvtColor(matImage, matImage, cv::COLOR_BGR2RGB);
+        if (preprocessData.doConvertColor())
+            cv::cvtColor(matImage, matImage, preprocessData.colorConvCode);
 
+        // Scale
+        matImage.convertTo(preprocessedImage, CV_32FC3, preprocessData.scale);
+        
         // Normalize
-        matImage.convertTo(matImage32f, CV_32FC3, 0.003921569);
-        matImage32f = (matImage32f - EfficientNet::mean) / EfficientNet::std;
-
-        // HWC -> NCHW
-        cv::dnn::blobFromImage(matImage32f, blob);
-
-        const size_t inputTensorSize = vectorProduct(inputDims);
-        inputData.tensorsValues.resize(inputTensorSize);
-        inputData.tensorsValues.assign(blob.begin<float>(), blob.end<float>());
-
-        const size_t outputTensorSize = vectorProduct(outputDims);
-        assert(("[EfficientNet_Onnx] Output tensor size should equal to the label set size.",
-                labels.size() == outputTensorSize));
-        outputData.tensorsValues.resize(outputTensorSize);
-
-        Ort::MemoryInfo memoryInfo = Ort::MemoryInfo::CreateCpu(
-            OrtAllocatorType::OrtArenaAllocator, OrtMemType::OrtMemTypeDefault);
-        inputData.tensors.emplace_back(Ort::Value::CreateTensor<float>(
-            memoryInfo, inputData.tensorsValues.data(), inputTensorSize, 
-            inputDims.data(), inputDims.size()));
-        outputData.tensors.emplace_back(Ort::Value::CreateTensor<float>(
-            memoryInfo, outputData.tensorsValues.data(), outputTensorSize,
-            outputDims.data(), outputDims.size()));
+        if (preprocessData.doNormalize())
+            preprocessedImage = (preprocessedImage - preprocessData.mean) / preprocessData.std;
     }
+
+    // HWC -> NCHW
+    cv::dnn::blobFromImages(preprocessedImages, blobs);
+
+    /* Allocate model input */
+    inputData.tensorValues.assign(blobs.begin<float>(), blobs.end<float>());
+    inputData.tensor.emplace_back(Ort::Value::CreateTensor<float>(
+        memoryInfo, inputData.tensorValues.data(), inputTensorSize, 
+        input0Dims.data(), input0Dims.size()));
+
+    /* Allocate model output */
+    outputData.tensor.emplace_back(Ort::Value::CreateTensor<float>(
+        memoryInfo, outputData.tensorValues.data(), outputTensorSize,
+        output0Dims.data(), output0Dims.size()));
 }
 
-void EfficientNet_Onnx::postprocess(const OrtData& inputData, std::vector<cv::Mat>& outputs) const
+void EfficientNet_Onnx::postprocess(const OrtData& outputData, std::vector<cv::Mat>& outputs, 
+                                    int nImages, 
+                                    const PostprocessData& postprocessData) const
 {
-    const int nImages = inputData.tensors.size();
-    const int nLabels = inputData.tensorsValues.size();
+    assert(("[EfficientNet_Onnx][postprocess] Inference result tensor is empty.",
+                !outputData.empty()));
+
+    const int nLabels = m_modelInfo.outputDims.at(1);
     outputs.resize(nImages);
     for (int i = 0; i < nImages; ++i)
     {
         auto& iOutput = outputs.at(i);
-        const cv::Mat outMat = cv::Mat(1, nLabels, CV_32F, (void*)inputData.tensorsValues.data());
-        cv::exp(outMat, iOutput);
-        cv::divide(iOutput, cv::sum(iOutput)[0], iOutput);
+        const cv::Mat outMat = cv::Mat(1, nLabels, CV_32F, (void*)outputData.tensorValues.data());
+
+        if (postprocessData.doSoftmax)
+        {
+            cv::exp(outMat, iOutput);
+            cv::divide(iOutput, cv::sum(iOutput)[0], iOutput);
+        }
+        else
+        {
+            iOutput = outMat.clone();
+        }
     }
 }
 

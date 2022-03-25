@@ -29,7 +29,9 @@ public:
 
     ~EfficientNet_Torch() = default;
 
-    void Infer(const std::vector<cv::Mat>& images, std::vector<cv::Mat>& outs) override;
+    void Infer(const std::vector<cv::Mat>& images, std::vector<cv::Mat>& outs, 
+                const PreprocessData& preprocessData,
+                const PostprocessData& postprocessData) override;
 
 private:
 
@@ -40,7 +42,6 @@ private:
 private:
     torch::DeviceType m_device { torch::DeviceType::CPU };
     torch::jit::script::Module m_model;
-    bool m_initialized { false };
     torch::Tensor m_inputTensor;
     std::vector<torch::jit::IValue> m_inputs;
     torch::Tensor m_outs;
@@ -60,6 +61,21 @@ static void matToTensor(const cv::Mat& in, torch::Tensor& out)
 
 #include <onnxruntime_cxx_api.h>
 
+/**
+ *
+ * Assumptions made in this example:
+ *  1) The onnx model has 1 input node and 1 output node
+ *  2) The onnx model has a symbolic first dimension (i.e. -1x3x224x224)
+ *
+ *
+ * NOTE: Some onnx models may not have a symbolic first dimension. To prepare the onnx model, see the python code snippet below.
+ * =============  Python Example  ======================
+ * import onnx
+ * model = onnx.load_model('model.onnx')
+ * model.graph.input[0].type.tensor_type.shape.dim[0].dim_param = 'None'
+ * onnx.save_model(model, 'model-symbolic.onnx')
+ * 
+ */
 class EfficientNet_Onnx final : public NeuralNetwork
 {
 public:
@@ -68,25 +84,34 @@ public:
 
     ~EfficientNet_Onnx() = default;
 
-    void Infer(const std::vector<cv::Mat>& images, std::vector<cv::Mat>& outs) override;
+    void Infer(const std::vector<cv::Mat>& images, std::vector<cv::Mat>& outs, 
+                const PreprocessData& preprocessData,
+                const PostprocessData& postprocessData) override;
 
 private:
 
     typedef struct
     {
-        std::vector<Ort::Value> tensors;
-        std::vector<float> tensorsValues;
+        std::vector<Ort::Value> tensor; // a vector of 1 element
+        std::vector<float> tensorValues;
 
         void clear()
         {
-            tensors.clear();
-            tensorsValues.clear();
+            tensor.clear();
+            tensorValues.clear();
+        }
+
+        bool empty() const noexcept
+        {
+            return tensorValues.empty();
         }
     } OrtData;
 
-    void preprocess(const std::vector<cv::Mat>& images, OrtData& inputData, OrtData& outputData);
+    void preprocess(const std::vector<cv::Mat>& images, OrtData& inputData, OrtData& outputData, 
+                    const PreprocessData& preprocessData);
 
-    void postprocess(const OrtData& inputData, std::vector<cv::Mat>& outputs) const;
+    void postprocess(const OrtData& outputData, std::vector<cv::Mat>& outputs, int nImages,
+                    const PostprocessData& postprocessData) const;
 
 private:
     Ort::Session m_session { nullptr };
@@ -94,7 +119,6 @@ private:
     std::vector<const char*> m_inputNames, m_outputNames;
     cv::Size m_inputSize;
     OrtData m_inputData, m_outputData;
-    bool m_initialized { false };
     
     struct
     {

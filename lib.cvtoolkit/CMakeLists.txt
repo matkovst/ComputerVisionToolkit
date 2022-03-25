@@ -2,7 +2,7 @@ cmake_minimum_required( VERSION 3.10 )
 project( cvtoolkit )
 
 # Include OpenCV
-include( ${CMAKE_SOURCE_DIR}/cmake/FindOpenCV.txt )
+include( ${CMAKE_SOURCE_DIR}/cmake/FindOpenCV.cmake )
 
 file(GLOB_RECURSE CVTOOLKIT_INCLUDES "*.hpp")
 file(GLOB_RECURSE CVTOOLKIT_SOURCES "*.cpp")
@@ -16,7 +16,7 @@ set(TARGET ${PROJECT_NAME} PROPERTY CMAKE_CXX_EXTENSIONS OFF)
 target_include_directories( ${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include )
 target_include_directories( ${PROJECT_NAME} PUBLIC ${OpenCV_INCLUDE_DIRS} )
 if (${ONNXRUNTIME_FOUND})
-    target_link_libraries( ${PROJECT_NAME} ${onnxruntime_INCLUDE_DIRS} )
+    target_include_directories( ${PROJECT_NAME} PUBLIC ${onnxruntime_INCLUDE_DIRS} )
 endif()
 
 target_link_libraries( ${PROJECT_NAME} ${OpenCV_LIBS} )

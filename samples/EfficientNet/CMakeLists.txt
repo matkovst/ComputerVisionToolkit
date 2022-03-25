@@ -2,7 +2,7 @@ cmake_minimum_required( VERSION 3.10 )
 project( EfficientNet )
 
 # Include OpenCV
-include( ${CMAKE_SOURCE_DIR}/cmake/FindOpenCV.txt )
+include( ${CMAKE_SOURCE_DIR}/cmake/FindOpenCV.cmake )
 
 MACRO(add_example NAME)
     add_executable( ${NAME} ${NAME}.cpp )
@@ -23,3 +23,6 @@ MACRO(add_example NAME)
 ENDMACRO()
 
 add_example( efficientnet )
+if (${ONNXRUNTIME_FOUND})
+    add_example( _experimental_efficientnet )
+endif()

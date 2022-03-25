@@ -84,4 +84,102 @@ bool JsonSettings::gpu() const noexcept
     return m_gpu;
 }
 
+
+JsonModelSettings::JsonModelSettings(const std::string& jPath, const std::string& nodeName)
+    :m_jModelSettings(makeJsonObject(jPath))
+{
+    if ( m_jModelSettings.empty() )
+    {
+        std::cout << "[JsonModelSettings] Json is empty" << std::endl;
+        return;
+    }
+
+    const json jNodeSettings = m_jModelSettings[nodeName];
+    if ( jNodeSettings.empty() )
+    {
+        std::cerr << "[JsonModelSettings] Could not find " << nodeName << " section" << std::endl;
+        return;
+    }
+
+    if ( !jNodeSettings["model-path"].empty() )
+        m_modelPath = static_cast<std::string>(jNodeSettings["model-path"]);
+
+    if ( !jNodeSettings["model-engine"].empty() )
+        m_modelEngine = static_cast<std::string>(jNodeSettings["model-engine"]);
+
+    if ( !jNodeSettings["model-config-path"].empty() )
+        m_modelConfigPath = static_cast<std::string>(jNodeSettings["model-config-path"]);
+
+    if ( !jNodeSettings["model-classes-path"].empty() )
+        m_modelClassesPath = static_cast<std::string>(jNodeSettings["model-classes-path"]);
+        
+    /* Parse pre-processing params */
+    {
+        if ( !jNodeSettings["model-preprocessing-size"].empty() )
+            m_preprocessing.size = cvt::parseResolution(jNodeSettings["model-preprocessing-size"]);
+
+        if ( !jNodeSettings["model-preprocessing-color-code"].empty() )
+        {
+            const auto& colorMode = static_cast<std::string>(
+                jNodeSettings["model-preprocessing-color-code"]
+            );
+            if (colorMode == "rgb")
+                m_preprocessing.colorConvCode = cv::COLOR_BGR2RGB;
+        }
+
+        if ( !jNodeSettings["model-preprocessing-scale"].empty() )
+            m_preprocessing.scale = static_cast<double>(
+                jNodeSettings["model-preprocessing-scale"]
+            );
+
+        if ( !jNodeSettings["model-preprocessing-mean"].empty() )
+        {
+            std::vector<double> vecMean;
+            for (double x : jNodeSettings["model-preprocessing-mean"])
+                vecMean.emplace_back(x);
+
+            if (vecMean.size() > 2)
+                m_preprocessing.mean = { vecMean[0], vecMean[1], vecMean[2] };
+        }
+
+        if ( !jNodeSettings["model-preprocessing-std"].empty() )
+        {
+            std::vector<double> vecStd;
+            for (double x : jNodeSettings["model-preprocessing-std"])
+                vecStd.emplace_back(x);
+
+            if (vecStd.size() > 2)
+                m_preprocessing.std = { vecStd[0], vecStd[1], vecStd[2] };
+        }
+    }
+
+    /* Parse post-processing params */
+    {
+        if ( !jNodeSettings["model-postprocessing-softmax"].empty() )
+            m_postprocessing.doSoftmax = static_cast<bool>(
+                jNodeSettings["model-postprocessing-softmax"]
+            );
+    }
+}
+
+std::string JsonModelSettings::summary() const noexcept
+{
+    std::ostringstream oss;
+    oss << std::endl << std::right
+        << "\tMODEL SETTINGS: " << std::endl
+        << "\t\t- model-engine = " << modelEngine() << std::endl
+        << "\t\t- model-path = " << modelPath() << std::endl
+        << "\t\t- model-config-path = " << modelConfigPath() << std::endl
+        << "\t\t- model-classes-path = " << modelClassesPath() << std::endl
+
+        << "\t\t- model-preprocessing-size = " << modelPreprocessingSize() << std::endl
+        << "\t\t- model-preprocessing-color-code = " << modelPreprocessingColorConvMode() << std::endl
+        << "\t\t- model-preprocessing-scale = " << modelPreprocessingScale() << std::endl
+        << "\t\t- model-preprocessing-mean = " << modelPreprocessingMean() << std::endl
+        << "\t\t- model-preprocessing-std = " << modelPreprocessingStd();
+
+    return oss.str();
+
+}
+
 }
