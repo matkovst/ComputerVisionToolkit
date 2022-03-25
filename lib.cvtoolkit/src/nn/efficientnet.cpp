@@ -478,22 +478,25 @@ void EfficientNet_Onnx::postprocess(const OrtData& outputData, std::vector<cv::M
     assert(("[EfficientNet_Onnx][postprocess] Inference result tensor is empty.",
                 !outputData.empty()));
 
-    const int nLabels = m_modelInfo.outputDims.at(1);
     outputs.resize(nImages);
+    const int nLabels = m_modelInfo.outputDims.at(1);
+    auto tensorIt = outputData.tensorValues.cbegin();
     for (int i = 0; i < nImages; ++i)
     {
         auto& iOutput = outputs.at(i);
-        const cv::Mat outMat = cv::Mat(1, nLabels, CV_32F, (void*)outputData.tensorValues.data());
 
         if (postprocessData.doSoftmax)
         {
-            cv::exp(outMat, iOutput);
+            const cv::Mat tmpMat = cv::Mat(1, nLabels, CV_32F, (void*)&(*tensorIt));
+            cv::exp(tmpMat, iOutput);
             cv::divide(iOutput, cv::sum(iOutput)[0], iOutput);
         }
         else
         {
-            iOutput = outMat.clone();
+            iOutput = cv::Mat(1, nLabels, CV_32F, (void*)&(*tensorIt)).clone();
         }
+
+        tensorIt += nLabels;
     }
 }
 
