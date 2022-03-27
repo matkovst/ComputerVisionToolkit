@@ -6,7 +6,7 @@
 #include <opencv2/highgui.hpp>
 
 #include "cvtoolkit/cvgui.hpp"
-#include "cvtoolkit/json.hpp"
+#include "cvtoolkit/settings.hpp"
 
 
 const static std::string SampleName = "sample-template";
@@ -41,12 +41,14 @@ int main(int argc, char** argv)
     std::string settingsPath = parser.get<std::string>("@settings");
     if (settingsPath.empty())
         settingsPath = parser.get<std::string>("@json");
-    if (settingsPath.empty())
+    const auto [settingsOk, settingsMsg] = cvt::verifyFile(settingsPath);
+    if ( !settingsOk )
     {
-        std::cerr << "[" << TitleName << "] Could not load settings. You should specify \"--settings\" flag." << std::endl;
+        std::cerr << "[" << TitleName << "] Could not load settings: " 
+                    << settingsMsg << std::endl;
         return -1;
     }
-    std::shared_ptr<cvt::JsonSettings> jSettings = std::make_shared<cvt::JsonSettings>(settingsPath, SampleName);
+    const auto jSettings = std::make_shared<cvt::JsonSettings>(settingsPath, SampleName);
     std::cout << "[" << TitleName << "]" << jSettings->summary() << std::endl;
 
     /* Open stream */

@@ -5,6 +5,7 @@
 #include <opencv2/core.hpp>
 
 #include "utils.hpp"
+#include "settings.hpp"
 #include "nndetector.hpp"
 
 #include <json.hpp>

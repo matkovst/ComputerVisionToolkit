@@ -5,12 +5,10 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 
-#include <cvtoolkit/cvplayer.hpp>
-#include <cvtoolkit/cvgui.hpp>
-#include <cvtoolkit/utils.hpp>
-
-#include <json.hpp>
-using json = nlohmann::json;
+#include "cvtoolkit/cvplayer.hpp"
+#include "cvtoolkit/cvgui.hpp"
+#include "cvtoolkit/utils.hpp"
+#include "cvtoolkit/settings.hpp"
 
 
 const static std::string WinName = "Motion detection via frame differencing";
