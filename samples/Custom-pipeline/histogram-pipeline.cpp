@@ -12,7 +12,7 @@
 #include <cvtoolkit/utils.hpp>
 #include <cvtoolkit/math/poisson_estimator.hpp>
 
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
 

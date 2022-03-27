@@ -8,7 +8,7 @@
 #include "settings.hpp"
 #include "nndetector.hpp"
 
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
 

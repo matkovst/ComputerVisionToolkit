@@ -10,7 +10,7 @@
 #include <cvtoolkit/cvgui.hpp>
 #include <cvtoolkit/utils.hpp>
 
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
 

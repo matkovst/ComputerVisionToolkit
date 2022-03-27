@@ -6,6 +6,7 @@
 #include <opencv2/highgui.hpp>
 
 #include "cvtoolkit/cvgui.hpp"
+#include "cvtoolkit/logger.hpp"
 #include "cvtoolkit/settings.hpp"
 #include "cvtoolkit/nn/inception.hpp"
 
@@ -18,7 +19,6 @@ const static std::string TitleName = "Inception";
 
 const cv::String argKeys =
         "{ help usage ?   |        | print help }"
-        "{ @json j        |        | path to json }"
         "{ @settings s    |        | path to settings }"
         ;
 
@@ -48,7 +48,9 @@ public:
 
 int main(int argc, char** argv)
 {
-    std::cout << ">>> Program started. Have fun!" << std::endl;
+    auto logger = cvt::createLogger(TitleName, spdlog::level::debug);
+    logger->info("Program started. Have fun!");
+
     /* Parse command-line args */
     cv::CommandLineParser parser(argc, argv, argKeys);
     parser.about(TitleName);
@@ -66,17 +68,14 @@ int main(int argc, char** argv)
 
     /* Make Settings */
     std::string settingsPath = parser.get<std::string>("@settings");
-    if (settingsPath.empty())
-        settingsPath = parser.get<std::string>("@json");
     const auto [settingsOk, settingsMsg] = cvt::verifyFile(settingsPath);
     if ( !settingsOk )
     {
-        std::cerr << "[" << TitleName << "] Could not load settings: " 
-                    << settingsMsg << std::endl;
+        logger->error("Could not load settings: {}", settingsMsg);
         return -1;
     }
     const auto jSettings = std::make_shared<InceptionSettings>(settingsPath, SampleName);
-    std::cout << "[" << TitleName << "]" << jSettings->summary() << std::endl;
+    logger->debug(jSettings->summary());
 
     /* Open stream */
     std::shared_ptr<cvt::OpenCVPlayer> player = std::make_shared<cvt::OpenCVPlayer>(jSettings->input(), 
@@ -102,9 +101,8 @@ int main(int argc, char** argv)
     const auto model = cvt::createInception(modelInitData);
     if ( !(model && model->initialized()) )
     {
-        std::cerr << "[" << TitleName << "] Could not load model." 
-                  << " Probably chosen engine \"" << jSettings->modelEngine()
-                  << "\" is not supported." << std::endl;
+        logger->error("Could not load model. Probably chosen engine \"{}\" is not supported.", 
+                        jSettings->modelEngine());
         return -1;
     }
 
@@ -205,7 +203,7 @@ int main(int argc, char** argv)
         }
     }
     
-    std::cout << ">>> Inference metrics: " << metrics->summary() << std::endl;
-    std::cout << ">>> Program successfully finished" << std::endl;
+    logger->info("Inference metrics: {}", metrics->summary());
+    logger->info("Program successfully finished");
     return 0;
 }
