@@ -7,6 +7,14 @@ if (NOT EXISTS ${CMAKE_BINARY_DIR}/CMakeCache.txt)
   endif()
 endif()
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# Include 3rdparty
+include_directories( ${CMAKE_SOURCE_DIR}/3rdparty )
+
 # Include OpenCV
 include( ${CMAKE_SOURCE_DIR}/cmake/FindOpenCV.cmake )
 
@@ -15,9 +23,6 @@ include( ${CMAKE_SOURCE_DIR}/cmake/FindLibTorch.cmake )
 
 # (optional) OnnxRuntime
 include( ${CMAKE_SOURCE_DIR}/cmake/FindOnnxRuntime.cmake )
-
-# Include nlohmann
-include_directories( ${CMAKE_SOURCE_DIR}/3rdparty/nlohmann )
 
 # Connect lib.cvtoolkit
 set( CVTOOLKIT_DIR ${CMAKE_SOURCE_DIR}/lib.cvtoolkit )

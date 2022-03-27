@@ -5,8 +5,9 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 
-#include <cvtoolkit/cvgui.hpp>
-#include <cvtoolkit/json.hpp>
+#include "cvtoolkit/cvgui.hpp"
+#include "cvtoolkit/logger.hpp"
+#include "cvtoolkit/settings.hpp"
 
 
 const static std::string SampleName = "sample-template";
@@ -14,13 +15,15 @@ const static std::string TitleName = "Sample-template";
 
 const cv::String argKeys =
         "{ help usage ?   |        | print help }"
-        "{ @json j        |        | path to json }"
+        "{ @settings s    |        | path to settings }"
         ;
 
 
 int main(int argc, char** argv)
 {
-    std::cout << ">>> Program started. Have fun!" << std::endl;
+    auto logger = cvt::createLogger(TitleName, spdlog::level::debug);
+    logger->info("Program started. Have fun!");
+
     /* Parse command-line args */
     cv::CommandLineParser parser(argc, argv, argKeys);
     parser.about(TitleName);
@@ -37,9 +40,15 @@ int main(int argc, char** argv)
     }
 
     /* Make Settings */
-    const std::string jsonPath = parser.get<std::string>("@json");
-    std::shared_ptr<cvt::JsonSettings> jSettings = std::make_shared<cvt::JsonSettings>(jsonPath, SampleName);
-    std::cout << "[" << TitleName << "]" << jSettings->summary() << std::endl;
+    std::string settingsPath = parser.get<std::string>("@settings");
+    const auto [settingsOk, settingsMsg] = cvt::verifyFile(settingsPath);
+    if ( !settingsOk )
+    {
+        logger->error("Could not load settings: {}", settingsMsg);
+        return -1;
+    }
+    const auto jSettings = std::make_shared<cvt::JsonSettings>(settingsPath, SampleName);
+    logger->debug(jSettings->summary());
 
     /* Open stream */
     std::shared_ptr<cvt::OpenCVPlayer> player = std::make_shared<cvt::OpenCVPlayer>(jSettings->input(), 
@@ -128,7 +137,7 @@ int main(int argc, char** argv)
         }
     }
     
-    std::cout << ">>> Inference metrics: " << metrics->summary() << std::endl;
-    std::cout << ">>> Program successfully finished" << std::endl;
+    logger->info("Inference metrics: {}", metrics->summary());
+    logger->info("Program successfully finished");
     return 0;
 }

@@ -264,4 +264,24 @@ json makeJsonObject(const std::string& jPath)
     return j;
 }
 
+std::pair<bool, std::string> verifyFile(const fs::path& path)
+{
+    auto resp = std::make_pair<bool, std::string>(false, "");
+
+    if (path.empty())
+    {
+        resp.second = "path is empty";
+        return resp;
+    }
+
+    if ( !fs::exists(path) )
+    {
+        resp.second = "path does not exist";
+        return resp;
+    }
+
+    resp.first = true;
+    return resp;
+}
+
 }

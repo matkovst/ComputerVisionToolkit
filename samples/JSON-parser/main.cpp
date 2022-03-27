@@ -3,7 +3,7 @@
 
 #include <opencv2/core.hpp>
 
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
 const cv::String argKeys =

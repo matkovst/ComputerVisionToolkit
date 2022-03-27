@@ -1,12 +1,13 @@
 #include <signal.h>
 #include <iostream>
+#include <filesystem>
 
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 
 #include <cvtoolkit/cvgui.hpp>
-#include <cvtoolkit/json.hpp>
+#include <cvtoolkit/settings.hpp>
 #include <cvtoolkit/nn/efficientnet.hpp>
 
 
@@ -82,6 +83,7 @@ int main(int argc, char** argv)
         engine = cvt::NeuralNetwork::Engine::Onnx;
     cvt::NeuralNetwork::InitializeData modelInitData
     {
+        "",
         jSettings->modelPath(),
         jSettings->modelConfigPath(),
         jSettings->modelClassesPath(),

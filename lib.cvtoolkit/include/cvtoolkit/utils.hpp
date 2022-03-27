@@ -2,6 +2,11 @@
 
 #include <iostream>
 #include <iomanip>
+#include <filesystem>
+
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
+
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
@@ -9,7 +14,8 @@
 #include "types.hpp"
 #include "metrics.hpp"
 #include "trigger.hpp"
-#include "json.hpp"
+
+namespace fs = std::filesystem;
 
 namespace cvt
 {
@@ -49,6 +55,8 @@ void stack4images( const cv::Mat& lt, const cv::Mat& rt, const cv::Mat& lb, cons
 cv::Size parseResolution(const std::string& resol);
 
 json makeJsonObject(const std::string& jPath);
+
+std::pair<bool, std::string> verifyFile(const fs::path& path);
 
 template <typename T>
 static T clip(const T& n, const T& lower, const T& upper)

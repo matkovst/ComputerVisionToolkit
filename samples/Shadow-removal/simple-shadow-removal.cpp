@@ -8,7 +8,7 @@
 #include <opencv2/highgui.hpp>
 
 #include <cvtoolkit/cvgui.hpp>
-#include <cvtoolkit/json.hpp>
+#include <cvtoolkit/settings.hpp>
 #include <cvtoolkit/utils.hpp>
 
 

@@ -7,13 +7,21 @@
 
 #pragma once
 
+#include <map>
 #include <string>
 #include <vector>
 #include <functional>
+#include <filesystem>
+#include <optional>
+
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
-#include "cvtoolkit/image.hpp"
+#include <opencv2/dnn.hpp>
+
+#include "cvtoolkit/utils.hpp"
 #include "cvtoolkit/nn/utils.hpp"
+
+namespace fs = std::filesystem;
 
 namespace cvt
 {
@@ -24,6 +32,8 @@ class NeuralNetwork
 {
 
 public:
+
+    using Labels = std::map<int, std::string>;
 
     enum Engine
     {
@@ -40,6 +50,7 @@ public:
 
     struct InitializeData
     {
+        fs::path modelRootDir;
         std::string modelPath { "" };
         std::string modelConfigPath { "" };
         std::string modelClassesPath { "" };
@@ -47,12 +58,15 @@ public:
         int engine;
         int device;
 
-        InitializeData(const std::string& modelPath, const std::string& modelConfigPath, 
+        InitializeData(const fs::path& modelRootDir,
+                        const std::string& modelPath, 
+                        const std::string& modelConfigPath, 
                         const std::string& modelClassesPath = "", 
                         cv::Size modelInputSize = cv::Size(), 
                         int engine = Engine::OpenCV, 
                         int device = Device::Cpu)
-            : modelPath(modelPath)
+            : modelRootDir(modelRootDir)
+            , modelPath(modelPath)
             , modelConfigPath(modelConfigPath)
             , modelClassesPath(modelClassesPath)
             , modelInputSize(modelInputSize)
@@ -136,11 +150,45 @@ public:
 
     /*! @brief Indicates whether model loaded successfully.
     */
-    virtual inline bool initialized() const noexcept { return m_initialized; };
+    virtual inline bool initialized() const noexcept { return m_initialized; }
+
+    virtual const std::string& label(size_t id) const noexcept;
 
 protected:
     const InitializeData m_initializeData;
     bool m_initialized { false }; // = false if model failed to load
+
+private:
+    Labels m_labels;
+    const std::string m_dummyLabel { "" };
+};
+
+
+/*! @brief The interface for loading and holding OpenCV model.
+*/
+class IOpenCVLoader
+{
+public:
+
+    IOpenCVLoader() = default;
+
+    virtual ~IOpenCVLoader() = default;
+
+    /*! @brief Load cv::dnn::Net.
+
+        @param modelDataPath path to model directory which contains all necessary files.
+        @param device device type.
+
+        @return Whether loading is successful
+    */
+    bool load(const fs::path& modelDataPath, int device);
+
+protected:
+    cv::dnn::Net m_model;
+    std::string m_inputName;
+    std::string m_outputName;
+
+    std::optional<fs::path> contains(const fs::path& path, const std::string& modelExt) const;
 };
 
 }

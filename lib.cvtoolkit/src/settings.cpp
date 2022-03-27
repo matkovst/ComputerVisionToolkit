@@ -1,7 +1,6 @@
 #include <sstream>
 #include "cvtoolkit/utils.hpp"
-
-#include "cvtoolkit/json.hpp"
+#include "cvtoolkit/settings.hpp"
 
 namespace cvt
 {
@@ -101,6 +100,9 @@ JsonModelSettings::JsonModelSettings(const std::string& jPath, const std::string
         return;
     }
 
+    if ( !jNodeSettings["model-root-dir"].empty() )
+        m_modelRootDir = static_cast<std::string>(jNodeSettings["model-root-dir"]);
+
     if ( !jNodeSettings["model-path"].empty() )
         m_modelPath = static_cast<std::string>(jNodeSettings["model-path"]);
 
@@ -179,7 +181,17 @@ std::string JsonModelSettings::summary() const noexcept
         << "\t\t- model-preprocessing-std = " << modelPreprocessingStd();
 
     return oss.str();
+}
 
+int JsonModelSettings::engine() const noexcept
+{
+    int engine = cvt::NeuralNetwork::Engine::OpenCV;
+    if (modelEngine() == "torch")
+        engine = cvt::NeuralNetwork::Engine::Torch;
+    else if (modelEngine() == "onnx")
+        engine = cvt::NeuralNetwork::Engine::Onnx;
+
+    return engine;
 }
 
 }

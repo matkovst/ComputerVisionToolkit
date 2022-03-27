@@ -182,33 +182,4 @@ private:
     inline std::string getClassName( int classId );
 };
 
-
-/*! @brief The class implements Inception model.
-*/
-class InceptionNNClassifier final : public ImageNNClassifier
-{
-public:
-    InceptionNNClassifier( const std::string& modelPath, const std::string& classNamesPath, 
-                            int backend = cv::dnn::DNN_BACKEND_DEFAULT, 
-                            int target = cv::dnn::DNN_TARGET_CPU,
-                            const std::string& inputBlobName = "input", 
-                            const std::string& outputBlobName = "softmax2" );
-
-    ~InceptionNNClassifier() = default;
-
-    void Infer( const cv::Mat& frame, InferOuts& out, float confThreshold = DEFAULT_CONF, 
-                            const ObjectClasses& acceptedClasses = ObjectClasses() ) override;
-
-private:
-    std::string m_inputBlobName;
-    std::string m_outputBlobName;
-
-    inline void preprocess( const cv::Mat& frame );
-
-    void postprocess( const cv::Mat& frame, const cv::Mat& out, 
-                InferOuts& inferOuts, float confThreshold = 0.25f, const ObjectClasses& acceptedClasses = ObjectClasses() );
-
-    void getTop1Class(const cv::Mat &probBlob, int *classId, double *classProb);
-};
-
 }
