@@ -25,7 +25,7 @@ add_subdirectory( Motion-detector )
 
 add_subdirectory( YOLO-object-detector )
 
-add_subdirectory( Inception-image-classifier )
+add_subdirectory( Inception )
 
 add_subdirectory( Illumination-estimation )
 

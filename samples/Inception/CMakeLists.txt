@@ -1,5 +1,5 @@
 cmake_minimum_required( VERSION 3.10 )
-project( Inception-image-classifier )
+project( Inception )
 
 # Include OpenCV
 include( ${CMAKE_SOURCE_DIR}/cmake/FindOpenCV.cmake )
@@ -7,7 +7,7 @@ include( ${CMAKE_SOURCE_DIR}/cmake/FindOpenCV.cmake )
 MACRO(add_example NAME)
     add_executable( ${NAME} ${NAME}.cpp )
 
-    set(TARGET ${NAME} PROPERTY CMAKE_CXX_STANDARD 14)
+    set(TARGET ${NAME} PROPERTY CMAKE_CXX_STANDARD 17)
     set(TARGET ${NAME} PROPERTY CMAKE_CXX_STANDARD_REQUIRED ON)
     #set(TARGET ${NAME} PROPERTY CMAKE_CXX_EXTENSIONS OFF)
 
@@ -22,4 +22,4 @@ MACRO(add_example NAME)
         RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
 ENDMACRO()
 
-add_example( inception-image-classifier )
+add_example( inception )

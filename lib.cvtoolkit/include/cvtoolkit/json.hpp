@@ -1,12 +1,14 @@
 #pragma once
 
 #include <iostream>
-#include <opencv2/core.hpp>
-
+#include <filesystem>
 #include <json.hpp>
 using json = nlohmann::json;
 
+#include <opencv2/core.hpp>
+
 #include "types.hpp"
+#include "cvtoolkit/nn/nn.hpp"
 
 namespace cvt
 {
@@ -58,6 +60,8 @@ public:
 
     std::string summary() const noexcept;
 
+    const std::filesystem::path& modelRootDir() const noexcept { return m_modelRootDir; }
+
     const std::string& modelPath() const noexcept { return m_modelPath; }
 
     const std::string& modelEngine() const noexcept { return m_modelEngine; }
@@ -78,14 +82,17 @@ public:
 
     bool modelPostprocessingSotfmax() const noexcept { return m_postprocessing.doSoftmax; }
 
+    int engine() const noexcept;
+
 protected:
     const json m_jModelSettings;
 
 private:
-    std::string m_modelEngine { "" };
+    std::filesystem::path m_modelRootDir { "" };
     std::string m_modelPath { "" };
     std::string m_modelConfigPath { "" };
     std::string m_modelClassesPath { "" };
+    std::string m_modelEngine { "" };
 
     struct
     {

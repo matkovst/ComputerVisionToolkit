@@ -3,9 +3,13 @@
 #include <fstream>
 #include <sstream>
 #include <utility>
+#include <optional>
+#include <filesystem>
 #include <map>
 #include "cvtoolkit/image.hpp"
 #include "cvtoolkit/json.hpp"
+
+namespace fs = std::filesystem;
 
 namespace cvt
 {
@@ -74,6 +78,14 @@ static std::pair<int, float> maxLabel(const Image& img)
     cv::Mat matImage;
     imageToMat(img, matImage);
     return maxLabel(matImage);
+}
+
+static std::optional<fs::path> getFileWithExt(const fs::path& path, const std::string& ext)
+{
+    for (const auto& file : fs::recursive_directory_iterator(path))
+        if (ext == file.path().extension())
+            return file.path();
+    return std::nullopt;
 }
 
 }

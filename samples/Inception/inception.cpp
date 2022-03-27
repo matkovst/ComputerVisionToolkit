@@ -1,39 +1,43 @@
 #include <signal.h>
 #include <iostream>
-#include <filesystem>
 
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 
-#include <cvtoolkit/cvgui.hpp>
-#include <cvtoolkit/json.hpp>
-#include <cvtoolkit/nn/efficientnet.hpp>
+#include "cvtoolkit/cvgui.hpp"
+#include "cvtoolkit/json.hpp"
+#include "cvtoolkit/nn/inception.hpp"
 
+/* The model and class names list can be downloaded from here:
+    https://storage.googleapis.com/download.tensorflow.org/models/inception5h.zip
+*/
 
-const static std::string SampleName = "efficientnet";
-const static std::string TitleName = "EfficientNet";
+const static std::string SampleName = "inception";
+const static std::string TitleName = "Inception";
 
 const cv::String argKeys =
         "{ help usage ?   |        | print help }"
         "{ @json j        |        | path to json }"
+        "{ @settings s    |        | path to settings }"
         ;
 
-class EfficientNetSettings final : public cvt::JsonSettings, public cvt::JsonModelSettings
+
+class InceptionSettings final : public cvt::JsonSettings, public cvt::JsonModelSettings
 {
 public:
-    EfficientNetSettings(const std::string& jPath, const std::string& nodeName)
+    InceptionSettings(const std::string& jPath, const std::string& nodeName)
         : JsonSettings(jPath, nodeName)
         , JsonModelSettings(jPath, nodeName)
     {
         if ( m_jNodeSettings.empty() )
         {
-            std::cerr << "[EfficientNetSettings] Could not find " << nodeName << " section" << std::endl;
+            std::cerr << "[InceptionSettings] Could not find " << nodeName << " section" << std::endl;
             return;
         }
     }
 
-    ~EfficientNetSettings() = default;
+    ~InceptionSettings() = default;
 
     std::string summary() const noexcept
     {
@@ -61,8 +65,15 @@ int main(int argc, char** argv)
     }
 
     /* Make Settings */
-    const std::string jsonPath = parser.get<std::string>("@json");
-    std::shared_ptr<EfficientNetSettings> jSettings = std::make_shared<EfficientNetSettings>(jsonPath, SampleName);
+    std::string settingsPath = parser.get<std::string>("@settings");
+    if (settingsPath.empty())
+        settingsPath = parser.get<std::string>("@json");
+    if (settingsPath.empty())
+    {
+        std::cerr << "[" << TitleName << "] Could not load settings. You should specify \"--settings\" flag." << std::endl;
+        return -1;
+    }
+    const auto jSettings = std::make_shared<InceptionSettings>(settingsPath, SampleName);
     std::cout << "[" << TitleName << "]" << jSettings->summary() << std::endl;
 
     /* Open stream */
@@ -76,22 +87,17 @@ int main(int argc, char** argv)
     const double fps = player->fps();
 
     /* Task-specific declarations */
-    int engine = cvt::NeuralNetwork::Engine::OpenCV;
-    if (jSettings->modelEngine() == "torch")
-        engine = cvt::NeuralNetwork::Engine::Torch;
-    else if (jSettings->modelEngine() == "onnx")
-        engine = cvt::NeuralNetwork::Engine::Onnx;
     cvt::NeuralNetwork::InitializeData modelInitData
     {
-        "",
+        jSettings->modelRootDir(),
         jSettings->modelPath(),
         jSettings->modelConfigPath(),
         jSettings->modelClassesPath(),
         cv::Size(),
-        engine,
+        jSettings->engine(),
         cvt::NeuralNetwork::Device::Cpu
     };
-    std::shared_ptr<cvt::NeuralNetwork> model = cvt::createEfficientNet(modelInitData);
+    const auto model = cvt::createInception(modelInitData);
     if ( !(model && model->initialized()) )
     {
         std::cerr << "[" << TitleName << "] Could not load model." 
@@ -99,27 +105,21 @@ int main(int argc, char** argv)
                   << "\" is not supported." << std::endl;
         return -1;
     }
-    const auto labelsMap = cvt::loadJsonLabelsMap(jSettings->modelClassesPath());
 
-    const cvt::NeuralNetwork::PreprocessData preprocessData = {
-        jSettings->modelPreprocessingSize(),
-        jSettings->modelPreprocessingColorConvMode(),
-        jSettings->modelPreprocessingScale(),
-        jSettings->modelPreprocessingMean(),
-        jSettings->modelPreprocessingStd()
-    };
+    // const cvt::NeuralNetwork::PreprocessData preprocessData = {
+    //     jSettings->modelPreprocessingSize(),
+    //     jSettings->modelPreprocessingColorConvMode(),
+    //     jSettings->modelPreprocessingScale(),
+    //     jSettings->modelPreprocessingMean(),
+    //     jSettings->modelPreprocessingStd()
+    // };
 
-    const cvt::NeuralNetwork::PostprocessData postprocessData = {
-        jSettings->modelPostprocessingSotfmax()
-    };
+    // const cvt::NeuralNetwork::PostprocessData postprocessData = {
+    //     jSettings->modelPostprocessingSotfmax()
+    // };
 
     /* Main loop */
-    cv::Mat frame, modelOutput, out;
-    std::shared_ptr<cv::Mat> detailedFramePtr;
-    if ( jSettings->display() )
-    {
-        detailedFramePtr = std::make_shared<cv::Mat>();
-    }
+    cv::Mat frame, modelOut, out;
 
     bool loop = true;
     const bool isImage = (player->getInputType(jSettings->input()) == cvt::OpenCVPlayer::InputType::IMAGE);
@@ -144,7 +144,7 @@ int main(int argc, char** argv)
         {
             auto m = metrics->measure();
 
-            model->Infer(frame, modelOutput, preprocessData, postprocessData);
+            model->Infer(frame, modelOut);
         }
 
         /* Display info */
@@ -173,8 +173,8 @@ int main(int argc, char** argv)
 
                 /* Sort predictions by desc */
                 cv::Mat sortedOut, sortedOutIdx;
-                cv::sort(modelOutput, sortedOut, cv::SORT_EVERY_ROW + cv::SORT_DESCENDING);
-                cv::sortIdx(modelOutput, sortedOutIdx, cv::SORT_EVERY_ROW + cv::SORT_DESCENDING);
+                cv::sort(modelOut, sortedOut, cv::SORT_EVERY_ROW + cv::SORT_DESCENDING);
+                cv::sortIdx(modelOut, sortedOutIdx, cv::SORT_EVERY_ROW + cv::SORT_DESCENDING);
 
                 /* Draw top K predictions */
                 const int k = 5;
@@ -185,17 +185,13 @@ int main(int argc, char** argv)
                     const int idx = sortedOutIdx.at<int>(i);
                     const float prob = sortedOut.at<float>(i) * 100.0f;
                     const std::string text = "#" + std::to_string(idx) + 
-                                            " " + labelsMap.at(idx) + 
+                                            " " + model->label(sortedOutIdx.at<int>(i)) + 
                                             " (" + cv::format("%.2f", prob) +
                                             "%)";
                     gui.putText(out, text, org, cv::Scalar(0, 255, 0));
                 }
                 
                 gui.imshow(out, jSettings->record());
-                if ( detailedFramePtr && !detailedFramePtr->empty() )
-                {
-                    cv::imshow("Detailed", *detailedFramePtr);
-                }
             }
         }
 

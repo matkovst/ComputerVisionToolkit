@@ -5,8 +5,8 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 
-#include <cvtoolkit/cvgui.hpp>
-#include <cvtoolkit/json.hpp>
+#include "cvtoolkit/cvgui.hpp"
+#include "cvtoolkit/json.hpp"
 
 
 const static std::string SampleName = "sample-template";
@@ -14,7 +14,8 @@ const static std::string TitleName = "Sample-template";
 
 const cv::String argKeys =
         "{ help usage ?   |        | print help }"
-        "{ @json j        |        | path to json }"
+        "{ @json j        |        | path to json }" // NOTE: deprecated
+        "{ @settings s    |        | path to settings }"
         ;
 
 
@@ -37,8 +38,15 @@ int main(int argc, char** argv)
     }
 
     /* Make Settings */
-    const std::string jsonPath = parser.get<std::string>("@json");
-    std::shared_ptr<cvt::JsonSettings> jSettings = std::make_shared<cvt::JsonSettings>(jsonPath, SampleName);
+    std::string settingsPath = parser.get<std::string>("@settings");
+    if (settingsPath.empty())
+        settingsPath = parser.get<std::string>("@json");
+    if (settingsPath.empty())
+    {
+        std::cerr << "[" << TitleName << "] Could not load settings. You should specify \"--settings\" flag." << std::endl;
+        return -1;
+    }
+    std::shared_ptr<cvt::JsonSettings> jSettings = std::make_shared<cvt::JsonSettings>(settingsPath, SampleName);
     std::cout << "[" << TitleName << "]" << jSettings->summary() << std::endl;
 
     /* Open stream */
