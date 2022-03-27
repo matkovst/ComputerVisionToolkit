@@ -1,5 +1,5 @@
 cmake_minimum_required( VERSION 3.10 )
-project( YOLO-object-detector )
+project( EfficientNet )
 
 # Include OpenCV
 include( ${CMAKE_SOURCE_DIR}/cmake/FindOpenCV.cmake )
@@ -22,13 +22,7 @@ MACRO(add_example NAME)
         RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
 ENDMACRO()
 
-add_example( yolo-object-detector )
-
-# if (NOT EXISTS "${CMAKE_SOURCE_DIR}/data")
-#     add_custom_target(build-time-make-directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/data)
-# endif()
-
-# if (NOT EXISTS "${CMAKE_SOURCE_DIR}/data/yolov3_default")
-#     add_custom_target(build-time-make-directory-2 ALL COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/data/yolov3_default)
-#     file(DOWNLOAD https://pjreddie.com/media/files/yolov3.weights ${CMAKE_SOURCE_DIR}/data/yolov3_default/yolo.weights)
-# endif()
+add_example( efficientnet )
+if (${ONNXRUNTIME_FOUND})
+    add_example( _experimental_efficientnet )
+endif()

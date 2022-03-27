@@ -46,6 +46,65 @@ private:
     Areas m_areas;
 };
 
+
+/*! @brief The optional class for json model settings.
+*/
+class JsonModelSettings
+{
+public:
+    JsonModelSettings(const std::string& jPath, const std::string& nodeName);
+
+    virtual ~JsonModelSettings() = default;
+
+    std::string summary() const noexcept;
+
+    const std::string& modelPath() const noexcept { return m_modelPath; }
+
+    const std::string& modelEngine() const noexcept { return m_modelEngine; }
+
+    const std::string& modelConfigPath() const noexcept { return m_modelConfigPath; }
+
+    const std::string& modelClassesPath() const noexcept { return m_modelClassesPath; }
+
+    cv::Size modelPreprocessingSize() const noexcept { return m_preprocessing.size; }
+
+    int modelPreprocessingColorConvMode() const noexcept { return m_preprocessing.colorConvCode; }
+
+    double modelPreprocessingScale() const noexcept { return m_preprocessing.scale; }
+
+    cv::Scalar modelPreprocessingMean() const noexcept { return m_preprocessing.mean; }
+
+    cv::Scalar modelPreprocessingStd() const noexcept { return m_preprocessing.std; }
+
+    bool modelPostprocessingSotfmax() const noexcept { return m_postprocessing.doSoftmax; }
+
+protected:
+    const json m_jModelSettings;
+
+private:
+    std::string m_modelEngine { "" };
+    std::string m_modelPath { "" };
+    std::string m_modelConfigPath { "" };
+    std::string m_modelClassesPath { "" };
+
+    struct
+    {
+        cv::Size size;
+        int colorConvCode { -1 };
+        double scale;
+        cv::Scalar mean;
+        cv::Scalar std;
+    } m_preprocessing;
+
+    struct
+    {
+        bool doSoftmax;
+    } m_postprocessing;
+
+
+};
+
+
 static Areas parseAreas(json jAreas, cv::Size2d scale = cv::Size2d(1.0, 1.0))
 {
     if ( jAreas.empty() ) return Areas();

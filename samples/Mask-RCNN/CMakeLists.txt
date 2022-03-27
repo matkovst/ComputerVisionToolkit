@@ -2,7 +2,7 @@ cmake_minimum_required( VERSION 3.10 )
 project( mask-rcnn )
 
 # Include OpenCV
-include( ${CMAKE_SOURCE_DIR}/FindOpenCV.txt )
+include( ${CMAKE_SOURCE_DIR}/cmake/FindOpenCV.cmake )
 
 add_executable( ${PROJECT_NAME} main.cpp )
 

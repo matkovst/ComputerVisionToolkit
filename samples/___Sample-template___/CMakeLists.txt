@@ -1,8 +1,8 @@
-cmake_minimum_required( VERSION 2.8 )
+cmake_minimum_required( VERSION 3.10 )
 project( Sample-template )
 
 # Include OpenCV
-include( ${CMAKE_SOURCE_DIR}/FindOpenCV.txt )
+include( ${CMAKE_SOURCE_DIR}/cmake/FindOpenCV.cmake )
 
 MACRO(add_example NAME)
     add_executable( ${NAME} ${NAME}.cpp )

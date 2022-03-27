@@ -32,3 +32,5 @@ add_subdirectory( Illumination-estimation )
 add_subdirectory( Monodepth )
 
 add_subdirectory( Shadow-removal )
+
+add_subdirectory( EfficientNet )
