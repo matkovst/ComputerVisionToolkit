@@ -57,7 +57,7 @@ bool IOpenCVLoader::load(const fs::path& modelDataPath, int device)
                     m_model.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);
                 }
                 break;
-#elif
+#else
                 {
                     m_model.setPreferableBackend(cv::dnn::DNN_BACKEND_DEFAULT);
                     m_model.setPreferableTarget(cv::dnn::DNN_TARGET_OPENCL);

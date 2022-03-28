@@ -61,7 +61,27 @@ std::pair<bool, std::string> verifyFile(const fs::path& path);
 template <typename T>
 static T clip(const T& n, const T& lower, const T& upper)
 {
-  return std::max(lower, std::min(n, upper));
+    return std::max(lower, std::min(n, upper));
+}
+
+template<typename T>
+static std::string getClassName(T, const std::string& namespace_ = "")
+{
+    const std::string fullName = typeid(T).name();
+    std::string nameWithNamespace = fullName.substr(6, fullName.size());
+
+    std::string name = nameWithNamespace;
+    if ( !namespace_.empty() )
+    {
+        size_t position = nameWithNamespace.find(namespace_);
+        while (position != std::string::npos)
+        {
+            name.erase(position, namespace_.length());
+            position = name.find(namespace_, position + 1);
+        }
+    }
+
+    return name;
 }
 
 }

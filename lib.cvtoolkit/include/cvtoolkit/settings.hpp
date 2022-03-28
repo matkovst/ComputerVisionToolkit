@@ -7,8 +7,9 @@ using json = nlohmann::json;
 
 #include <opencv2/core.hpp>
 
+#include "logger.hpp"
 #include "types.hpp"
-#include "cvtoolkit/nn/nn.hpp"
+#include "nn/nn.hpp"
 
 namespace cvt
 {
@@ -21,6 +22,8 @@ public:
     JsonSettings(const std::string& jPath, const std::string& nodeName);
 
     virtual ~JsonSettings() = default;
+
+    bool init(const std::string& nodeName);
 
     std::string summary() const noexcept;
 
@@ -35,11 +38,15 @@ public:
 
     bool gpu() const noexcept;
 
+    inline bool initialize() const noexcept { return m_initialize; }
+
 protected:
     const json m_jSettings;
     json m_jNodeSettings;
 
 private:
+    LoggerPtr m_logger;
+    bool m_initialize { false };
     std::string m_input { "0" };
     cv::Size m_inputSize { 640, 360 };
     bool m_record { false };
@@ -88,6 +95,7 @@ protected:
     const json m_jModelSettings;
 
 private:
+    LoggerPtr m_logger;
     std::filesystem::path m_modelRootDir { "" };
     std::string m_modelPath { "" };
     std::string m_modelConfigPath { "" };

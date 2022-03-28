@@ -6,19 +6,26 @@ namespace cvt
 {
 
 JsonSettings::JsonSettings(const std::string& jPath, const std::string& nodeName)
-    :m_jSettings(makeJsonObject(jPath))
+    : m_jSettings(makeJsonObject(jPath))
+{
+    m_logger = createLogger(getClassName(*this, "cvt::"));
+
+    m_initialize = init(nodeName);
+}
+
+bool JsonSettings::init(const std::string& nodeName)
 {
     if ( m_jSettings.empty() )
     {
-        std::cout << "[JsonSettings] Json is empty" << std::endl;
-        return;
+        m_logger->error("Json is empty");
+        return false;
     }
 
     m_jNodeSettings = m_jSettings[nodeName];
     if ( m_jNodeSettings.empty() )
     {
-        std::cerr << "[JsonSettings] Could not find " << nodeName << " section" << std::endl;
-        return;
+        m_logger->error("Could not find \"{}\" section", nodeName);
+        return false;
     }
         
     if ( !m_jNodeSettings["input"].empty() )
@@ -40,6 +47,8 @@ JsonSettings::JsonSettings(const std::string& jPath, const std::string& nodeName
     m_areas = cvt::parseAreas(m_jNodeSettings["areas"], m_inputSize);
     if ( m_areas.empty() )
         m_areas.emplace_back( cvt::createFullScreenArea(m_inputSize) );
+
+    return true;
 }
 
 std::string JsonSettings::summary() const noexcept
@@ -87,16 +96,18 @@ bool JsonSettings::gpu() const noexcept
 JsonModelSettings::JsonModelSettings(const std::string& jPath, const std::string& nodeName)
     :m_jModelSettings(makeJsonObject(jPath))
 {
+    m_logger = createLogger(getClassName(*this, "cvt::"));
+
     if ( m_jModelSettings.empty() )
     {
-        std::cout << "[JsonModelSettings] Json is empty" << std::endl;
+        m_logger->error("Json is empty");
         return;
     }
 
     const json jNodeSettings = m_jModelSettings[nodeName];
     if ( jNodeSettings.empty() )
     {
-        std::cerr << "[JsonModelSettings] Could not find " << nodeName << " section" << std::endl;
+        m_logger->error("Could not find \"{}\" section", nodeName);
         return;
     }
 

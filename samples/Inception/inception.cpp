@@ -30,9 +30,11 @@ public:
         : JsonSettings(jPath, nodeName)
         , JsonModelSettings(jPath, nodeName)
     {
+        m_logger = cvt::createLogger(getClassName(*this));
+
         if ( m_jNodeSettings.empty() )
         {
-            std::cerr << "[InceptionSettings] Could not find " << nodeName << " section" << std::endl;
+            m_logger->error("Could not find \"{}\" section", nodeName);
             return;
         }
     }
@@ -43,6 +45,9 @@ public:
     {
         return JsonSettings::summary() + JsonModelSettings::summary();
     }
+
+private:
+    cvt::LoggerPtr m_logger;
 };
 
 
@@ -75,6 +80,11 @@ int main(int argc, char** argv)
         return -1;
     }
     const auto jSettings = std::make_shared<InceptionSettings>(settingsPath, SampleName);
+    if (!jSettings || !jSettings->initialize())
+    {
+        logger->error("Could not initialize settings");
+        return -1;
+    }
     logger->debug(jSettings->summary());
 
     /* Open stream */
