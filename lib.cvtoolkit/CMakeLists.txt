@@ -30,7 +30,12 @@ if (${ONNXRUNTIME_FOUND})
     target_link_libraries( ${PROJECT_NAME} ${onnxruntime_LIBRARIES} )
 endif()
 
+# Tests
+if (RUN_TESTS)
+    add_subdirectory(lib.cvtoolkit.tests)
+endif()
 
+# Install
 install( TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/lib/ )
 
 # add_custom_command(TARGET ${PROJECT_NAME}

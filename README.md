@@ -69,4 +69,13 @@ Choose desired task in *bin/* directory (like *laplacian*) and just execute it.
 cd bin
 ./laplacian -?
 ```
+<br>
 
+## Developer zone
+
+### Run tests
+Unit tests are written with boost so in order to run it you need to have boost headers. Just copy all includes from *path/to/boost_archive/boost/** to *3rdparty/boost/**.<br>
+The next command executes tests
+```bash
+ctest -j10 -C Release -T test --output-on-failure
+```
