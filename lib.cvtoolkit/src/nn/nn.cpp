@@ -1,3 +1,4 @@
+#include "cvtoolkit/settings.hpp"
 #include "cvtoolkit/nn/nn.hpp"
 
 namespace cvt
@@ -6,7 +7,7 @@ namespace cvt
 NeuralNetwork::NeuralNetwork(const InitializeData& initializeData)
     : m_initializeData(initializeData)
 {
-    const auto labelsFile = getFileWithExt(initializeData.modelRootDir, ".txt");
+    const auto labelsFile = getFileWithExt(m_initializeData.modelRootDir, ".txt");
     if (labelsFile)
         m_labels = loadLabelsMap(labelsFile.value().string());
 }

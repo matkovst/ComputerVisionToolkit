@@ -76,11 +76,6 @@ int main(int argc, char** argv)
     const double fps = player->fps();
 
     /* Task-specific declarations */
-    int engine = cvt::NeuralNetwork::Engine::OpenCV;
-    if (jSettings->modelEngine() == "torch")
-        engine = cvt::NeuralNetwork::Engine::Torch;
-    else if (jSettings->modelEngine() == "onnx")
-        engine = cvt::NeuralNetwork::Engine::Onnx;
     cvt::NeuralNetwork::InitializeData modelInitData
     {
         "",
@@ -88,7 +83,7 @@ int main(int argc, char** argv)
         jSettings->modelConfigPath(),
         jSettings->modelClassesPath(),
         cv::Size(),
-        engine,
+        jSettings->engine(),
         cvt::NeuralNetwork::Device::Cpu
     };
     std::shared_ptr<cvt::NeuralNetwork> model = cvt::createEfficientNet(modelInitData);

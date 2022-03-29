@@ -50,13 +50,15 @@ public:
 
     struct InitializeData
     {
-        fs::path modelRootDir;
+        fs::path modelRootDir { "" };
         std::string modelPath { "" };
         std::string modelConfigPath { "" };
         std::string modelClassesPath { "" };
-        cv::Size modelInputSize;
-        int engine;
-        int device;
+        cv::Size modelInputSize { cv::Size() };
+        int engine { -1 };
+        int device { -1 };
+
+        InitializeData() = default;
 
         InitializeData(const fs::path& modelRootDir,
                         const std::string& modelPath, 
@@ -120,7 +122,7 @@ public:
 
 public:
 
-    NeuralNetwork(const InitializeData& initializeData);
+    explicit NeuralNetwork(const InitializeData& initializeData);
 
     virtual ~NeuralNetwork() = default;
 
