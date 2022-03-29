@@ -11,6 +11,8 @@ using json = nlohmann::json;
 #include "types.hpp"
 #include "nn/nn.hpp"
 
+namespace fs = std::filesystem;
+
 namespace cvt
 {
 
@@ -19,7 +21,7 @@ namespace cvt
 class JsonSettings
 {
 public:
-    JsonSettings(const std::string& jPath, const std::string& nodeName);
+    JsonSettings(const fs::path& jPath, const std::string& nodeName);
 
     virtual ~JsonSettings() = default;
 
@@ -38,7 +40,7 @@ public:
 
     bool gpu() const noexcept;
 
-    inline bool initialize() const noexcept { return m_initialize; }
+    inline bool initialized() const noexcept { return m_initialized; }
 
 protected:
     const json m_jSettings;
@@ -46,7 +48,7 @@ protected:
 
 private:
     LoggerPtr m_logger;
-    bool m_initialize { false };
+    bool m_initialized { false };
     std::string m_input { "0" };
     cv::Size m_inputSize { 640, 360 };
     bool m_record { false };
@@ -61,7 +63,7 @@ private:
 class JsonModelSettings
 {
 public:
-    JsonModelSettings(const std::string& jPath, const std::string& nodeName);
+    JsonModelSettings(const fs::path& jPath, const std::string& nodeName);
 
     virtual ~JsonModelSettings() = default;
 

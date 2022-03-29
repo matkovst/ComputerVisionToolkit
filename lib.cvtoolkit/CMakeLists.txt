@@ -31,7 +31,7 @@ if (${ONNXRUNTIME_FOUND})
 endif()
 
 # Tests
-if (RUN_TESTS)
+if (BUILD_TESTS)
     add_subdirectory(lib.cvtoolkit.tests)
 endif()
 

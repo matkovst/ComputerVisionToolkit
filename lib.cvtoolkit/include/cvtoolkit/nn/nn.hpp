@@ -1,5 +1,5 @@
 /**
- * @file nn_builder.hpp
+ * @file nn.hpp
  *
  * @brief This file contains logic for building arbitrary NNs.
  *
@@ -189,8 +189,6 @@ protected:
     cv::dnn::Net m_model;
     std::string m_inputName;
     std::string m_outputName;
-
-    std::optional<fs::path> contains(const fs::path& path, const std::string& modelExt) const;
 };
 
 }

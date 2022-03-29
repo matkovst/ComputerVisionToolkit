@@ -82,6 +82,12 @@ static std::pair<int, float> maxLabel(const Image& img)
 
 static std::optional<fs::path> getFileWithExt(const fs::path& path, const std::string& ext)
 {
+    if (path.empty() || !fs::exists(path))
+        return std::nullopt;
+
+    if (ext.empty())
+        return std::nullopt;
+
     for (const auto& file : fs::recursive_directory_iterator(path))
         if (ext == file.path().extension())
             return file.path();

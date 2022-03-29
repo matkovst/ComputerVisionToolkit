@@ -185,7 +185,7 @@ public:
         postprocess(m_outs, out);
     }
 
-    bool initialize() const noexcept
+    bool initialized() const noexcept
     {
         return m_modelInitialized;
     }
@@ -326,7 +326,7 @@ int main(int argc, char** argv)
         std::cerr << ">>> [ERROR] Could not create DPTMonodepth" << std::endl;
         return -1;
     }
-    else if ( !model->initialize() )
+    else if ( !model->initialized() )
     {
         std::cerr << ">>> [ERROR] DPTMonodepth created but DPT model has not been initialized" << std::endl;
         return -1;

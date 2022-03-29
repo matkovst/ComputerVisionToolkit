@@ -36,12 +36,12 @@ const std::string& NeuralNetwork::label(size_t id) const noexcept
 bool IOpenCVLoader::load(const fs::path& modelDataPath, int device)
 {
     /* Check TensorFlow */
-    const auto pbOpt = contains(modelDataPath, ".pb");
+    const auto pbOpt = getFileWithExt(modelDataPath, ".pb");
     if (pbOpt)
     {
         try
         {
-            const auto pbtxtOpt = contains(modelDataPath, ".pbtxt");
+            const auto pbtxtOpt = getFileWithExt(modelDataPath, ".pbtxt");
             m_model = cv::dnn::readNetFromTensorflow(pbOpt.value().string(), 
                             pbtxtOpt ? pbtxtOpt.value().string() : cv::String());
 
@@ -88,15 +88,6 @@ bool IOpenCVLoader::load(const fs::path& modelDataPath, int device)
     }
 
     return false;
-}
-
-std::optional<fs::path> IOpenCVLoader::contains(const fs::path& path, 
-                                                const std::string& modelExt) const
-{
-    for (const auto& file : fs::recursive_directory_iterator(path))
-        if (modelExt == file.path().extension())
-            return file.path();
-    return std::nullopt;
 }
 
 }

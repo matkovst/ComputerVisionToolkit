@@ -30,7 +30,7 @@ public:
         : JsonSettings(jPath, nodeName)
         , JsonModelSettings(jPath, nodeName)
     {
-        m_logger = cvt::createLogger(getClassName(*this));
+        m_logger = cvt::createLogger("InceptionSettings");
 
         if ( m_jNodeSettings.empty() )
         {
@@ -80,7 +80,7 @@ int main(int argc, char** argv)
         return -1;
     }
     const auto jSettings = std::make_shared<InceptionSettings>(settingsPath, SampleName);
-    if (!jSettings || !jSettings->initialize())
+    if (!jSettings || !jSettings->initialized())
     {
         logger->error("Could not initialize settings");
         return -1;

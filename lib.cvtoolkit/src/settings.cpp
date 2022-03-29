@@ -5,12 +5,12 @@
 namespace cvt
 {
 
-JsonSettings::JsonSettings(const std::string& jPath, const std::string& nodeName)
-    : m_jSettings(makeJsonObject(jPath))
+JsonSettings::JsonSettings(const fs::path& jPath, const std::string& nodeName)
+    : m_jSettings(makeJsonObject(jPath.string()))
 {
-    m_logger = createLogger(getClassName(*this, "cvt::"));
+    m_logger = createLogger((jPath / "JsonSettings" / nodeName).string());
 
-    m_initialize = init(nodeName);
+    m_initialized = init(nodeName);
 }
 
 bool JsonSettings::init(const std::string& nodeName)
@@ -92,11 +92,10 @@ bool JsonSettings::gpu() const noexcept
     return m_gpu;
 }
 
-
-JsonModelSettings::JsonModelSettings(const std::string& jPath, const std::string& nodeName)
-    :m_jModelSettings(makeJsonObject(jPath))
+JsonModelSettings::JsonModelSettings(const fs::path& jPath, const std::string& nodeName)
+    : m_jModelSettings(makeJsonObject(jPath.string()))
 {
-    m_logger = createLogger(getClassName(*this, "cvt::"));
+    m_logger = createLogger((jPath / "JsonModelSettings" / nodeName).string());
 
     if ( m_jModelSettings.empty() )
     {
