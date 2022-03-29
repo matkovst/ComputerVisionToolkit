@@ -1,3 +1,4 @@
+#include "cvtoolkit/trigger.hpp"
 #include "cvtoolkit/detector/optflow_motion_detector.hpp"
 
 

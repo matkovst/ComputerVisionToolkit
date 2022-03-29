@@ -1,3 +1,4 @@
+#include "cvtoolkit/trigger.hpp"
 #include "cvtoolkit/detector/yolo_object_detector.hpp"
 
 

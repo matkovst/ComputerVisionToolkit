@@ -8,6 +8,8 @@
 #include "../detector_manager.hpp"
 #include "../nndetector.hpp"
 
+class EventTrigger;
+
 namespace cvt
 {
 

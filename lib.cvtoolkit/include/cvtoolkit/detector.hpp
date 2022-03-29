@@ -1,16 +1,13 @@
 #pragma once
 
 #include <iostream>
-
 #include <opencv2/core.hpp>
-
-#include "utils.hpp"
-#include "settings.hpp"
-#include "nndetector.hpp"
-
 #include <nlohmann/json.hpp>
+#include "types.hpp"
+
 using json = nlohmann::json;
 
+class MetricMaster;
 
 namespace cvt
 {

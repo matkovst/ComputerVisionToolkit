@@ -1,8 +1,8 @@
 {
     "inception" : 
     {
-        "input" : "",
-        "input-size" : "",
+        "input" : "0",
+        "input-size" : "100x100",
         "record" : false,
         "display" : true,
         "gpu" : false,

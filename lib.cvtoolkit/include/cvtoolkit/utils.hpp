@@ -3,19 +3,16 @@
 #include <iostream>
 #include <iomanip>
 #include <filesystem>
-
 #include <nlohmann/json.hpp>
-using json = nlohmann::json;
 
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 
 #include "types.hpp"
-#include "metrics.hpp"
-#include "trigger.hpp"
 
 namespace fs = std::filesystem;
+using json = nlohmann::json;
 
 namespace cvt
 {

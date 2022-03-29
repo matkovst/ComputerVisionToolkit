@@ -1,3 +1,6 @@
+#include "cvtoolkit/metrics.hpp"
+#include "cvtoolkit/utils.hpp"
+#include "cvtoolkit/settings.hpp"
 #include "cvtoolkit/detector.hpp"
 
 namespace cvt

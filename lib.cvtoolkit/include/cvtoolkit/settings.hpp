@@ -9,7 +9,6 @@ using json = nlohmann::json;
 
 #include "logger.hpp"
 #include "types.hpp"
-#include "nn/nn.hpp"
 
 namespace fs = std::filesystem;
 

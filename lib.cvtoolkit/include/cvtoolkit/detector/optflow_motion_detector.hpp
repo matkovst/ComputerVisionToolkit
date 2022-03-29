@@ -14,6 +14,8 @@
 #include "../detector_manager.hpp"
 #include "../math/gaussian_estimator.hpp"
 
+class EventTrigger;
+
 namespace cvt
 {
 

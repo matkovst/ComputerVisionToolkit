@@ -3,8 +3,10 @@
 #include <iostream>
 #include <opencv2/highgui.hpp>
 
-#include <cvtoolkit/cvplayer.hpp>
-#include <cvtoolkit/utils.hpp>
+#include "cvtoolkit/cvplayer.hpp"
+#include "cvtoolkit/utils.hpp"
+
+class MetricMaster;
 
 namespace cvt
 {

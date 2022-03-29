@@ -1,5 +1,6 @@
 #include <sstream>
 #include "cvtoolkit/utils.hpp"
+#include "cvtoolkit/nn/nn.hpp"
 #include "cvtoolkit/settings.hpp"
 
 namespace cvt

@@ -1,6 +1,6 @@
-#include "cvtoolkit/cvgui.hpp"
-
 #include <sstream>
+#include "cvtoolkit/metrics.hpp"
+#include "cvtoolkit/cvgui.hpp"
 
 namespace cvt
 {
