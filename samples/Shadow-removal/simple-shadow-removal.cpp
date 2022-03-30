@@ -1,5 +1,7 @@
 #include <signal.h>
 #include <iostream>
+#include <filesystem>
+namespace fs = std::filesystem;
 #define _USE_MATH_DEFINES
 #include <math.h>
 
@@ -34,7 +36,7 @@ static std::vector<T> linspace(T a, T b, size_t N)
 class SimpleShadowTerminatorSettings final : public cvt::JsonSettings
 {
 public:
-    SimpleShadowTerminatorSettings(const std::string& jPath, const std::string& nodeName)
+    SimpleShadowTerminatorSettings(const fs::path& jPath, const std::string& nodeName)
         : JsonSettings(jPath, nodeName)
     {
         if ( m_jNodeSettings.empty() )

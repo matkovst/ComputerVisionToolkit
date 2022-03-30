@@ -13,9 +13,17 @@ auto goodKey = [](const json& j, const std::string& name)
 
 JsonSettings::JsonSettings(const fs::path& jPath, const std::string& nodeName)
     : m_jSettings(makeJsonObject(jPath.string()))
+    , m_loggerName("JsonSettings-" + nodeName)
 {
-    m_logger = createLogger((jPath / "JsonSettings" / nodeName).string());
+    m_logger = createLogger(m_loggerName);
+    m_initialized = init(nodeName);
+}
 
+JsonSettings::JsonSettings(const json& jSettings, const std::string& nodeName)
+    : m_jSettings(jSettings)
+    , m_loggerName("JsonSettings-" + nodeName)
+{
+    m_logger = createLogger(m_loggerName);
     m_initialized = init(nodeName);
 }
 
@@ -100,8 +108,23 @@ bool JsonSettings::gpu() const noexcept
 
 JsonModelSettings::JsonModelSettings(const fs::path& jPath, const std::string& nodeName)
     : m_jModelSettings(makeJsonObject(jPath.string()))
+    , m_nodeName(nodeName)
+    , m_loggerName("JsonModelSettings-" + nodeName)
 {
-    m_logger = createLogger((jPath / "JsonModelSettings" / nodeName).string());
+    init();
+}
+
+JsonModelSettings::JsonModelSettings(const json& jSettings, const std::string& nodeName)
+    : m_jModelSettings(jSettings)
+    , m_nodeName(nodeName)
+    , m_loggerName("JsonModelSettings-" + nodeName)
+{
+    init();
+}
+
+void JsonModelSettings::init()
+{
+    m_logger = createLogger(m_loggerName);
 
     if ( m_jModelSettings.empty() )
     {
@@ -109,10 +132,10 @@ JsonModelSettings::JsonModelSettings(const fs::path& jPath, const std::string& n
         return;
     }
 
-    const json jNodeSettings = m_jModelSettings[nodeName];
+    const json jNodeSettings = m_jModelSettings[m_nodeName];
     if ( jNodeSettings.empty() )
     {
-        m_logger->error("Could not find \"{}\" section", nodeName);
+        m_logger->error("Could not find \"{}\" section", m_nodeName);
         return;
     }
 

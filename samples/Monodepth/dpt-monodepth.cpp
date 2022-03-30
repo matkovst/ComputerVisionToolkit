@@ -1,5 +1,7 @@
 #include <signal.h>
 #include <iostream>
+#include <filesystem>
+namespace fs = std::filesystem;
 
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
@@ -26,7 +28,7 @@ const cv::String argKeys =
 class DPTMonodepthSettings final : public cvt::JsonSettings
 {
 public:
-    DPTMonodepthSettings(const std::string& jPath, const std::string& nodeName)
+    DPTMonodepthSettings(const fs::path& jPath, const std::string& nodeName)
         : JsonSettings(jPath, nodeName)
     {
         if ( m_jNodeSettings.empty() )

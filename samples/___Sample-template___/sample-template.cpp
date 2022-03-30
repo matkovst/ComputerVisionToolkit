@@ -1,5 +1,7 @@
 #include <signal.h>
 #include <iostream>
+#include <filesystem>
+namespace fs = std::filesystem;
 
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
@@ -50,7 +52,7 @@ int main(int argc, char** argv)
         logger->error("Could not load settings: {}", settingsMsg);
         return -1;
     }
-    const auto jSettings = std::make_shared<cvt::JsonSettings>(settingsPath, SampleName);
+    const auto jSettings = std::make_shared<cvt::JsonSettings>(fs::path(settingsPath), SampleName);
     logger->debug(jSettings->summary());
 
     /* Open stream */

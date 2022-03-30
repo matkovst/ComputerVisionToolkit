@@ -20,7 +20,8 @@ namespace cvt
 class JsonSettings
 {
 public:
-    JsonSettings(const fs::path& jPath, const std::string& nodeName);
+    explicit JsonSettings(const fs::path& jPath, const std::string& nodeName);
+    explicit JsonSettings(const json& jSettings, const std::string& nodeName);
 
     virtual ~JsonSettings() = default;
 
@@ -46,6 +47,7 @@ protected:
     json m_jNodeSettings;
 
 private:
+    const std::string m_loggerName { "JsonSettings" };
     LoggerPtr m_logger;
     bool m_initialized { false };
     std::string m_input { "0" };
@@ -62,7 +64,8 @@ private:
 class JsonModelSettings
 {
 public:
-    JsonModelSettings(const fs::path& jPath, const std::string& nodeName);
+    explicit JsonModelSettings(const fs::path& jPath, const std::string& nodeName);
+    explicit JsonModelSettings(const json& jSettings, const std::string& nodeName);
 
     virtual ~JsonModelSettings() = default;
 
@@ -96,6 +99,8 @@ protected:
     const json m_jModelSettings;
 
 private:
+    const std::string m_loggerName { "JsonModelSettings" };
+    const std::string m_nodeName;
     LoggerPtr m_logger;
     std::filesystem::path m_modelRootDir { "" };
     std::string m_modelPath { "" };
@@ -117,7 +122,7 @@ private:
         bool doSoftmax;
     } m_postprocessing;
 
-
+    void init();
 };
 
 

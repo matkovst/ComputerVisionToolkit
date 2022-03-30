@@ -11,6 +11,10 @@ namespace cvt
 
 LoggerPtr createLogger(const std::string& name, spdlog::level::level_enum logLevel)
 {
+    const auto existingLogger = spdlog::get(name);
+    if (existingLogger != nullptr)
+        return existingLogger;
+
     LoggerPtr logger;
     try
     {

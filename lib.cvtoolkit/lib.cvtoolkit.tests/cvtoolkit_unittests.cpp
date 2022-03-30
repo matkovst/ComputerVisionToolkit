@@ -1,6 +1,9 @@
 #define BOOST_TEST_MODULE LibCvtoolkit
 #include <boost/test/included/unit_test.hpp>
 
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
+
 #include "cvtoolkit/logger.hpp"
 #include "cvtoolkit/settings.hpp"
 #include "cvtoolkit/nn/nn.hpp"
@@ -32,6 +35,10 @@ BOOST_AUTO_TEST_CASE(test_settings)
     class MySettings final : public JsonSettings, public JsonModelSettings
     {
     public:
+        MySettings(const json& jSettings, const std::string& nodeName)
+            : JsonSettings(jSettings, nodeName)
+            , JsonModelSettings(jSettings, nodeName)
+        {}
         MySettings(const fs::path& jPath, const std::string& nodeName)
             : JsonSettings(jPath, nodeName)
             , JsonModelSettings(jPath, nodeName)
@@ -46,7 +53,7 @@ BOOST_AUTO_TEST_CASE(test_settings)
     };
 
     /* Try testing wrong path */
-    auto mySettings = std::make_shared<MySettings>("path-666", "node-666");
+    auto mySettings = std::make_shared<MySettings>(fs::path("path-666"), "node-666");
     BOOST_REQUIRE(nullptr != mySettings && !mySettings->initialized());
     mySettings.reset();
 
@@ -57,6 +64,13 @@ BOOST_AUTO_TEST_CASE(test_settings)
                         "To continue test you must create cvtoolkit_unittests.json");
 
     mySettings = std::make_shared<MySettings>(mySettingsPath, "my-settings");
+    BOOST_REQUIRE(nullptr != mySettings && mySettings->initialized());
+    mySettings.reset();
+
+    /* Try testing json-object settings */
+    json myJson;
+    myJson["my-settings"]["input"] = "";
+    mySettings = std::make_shared<MySettings>(myJson, "my-settings");
     BOOST_REQUIRE(nullptr != mySettings && mySettings->initialized());
 }
 

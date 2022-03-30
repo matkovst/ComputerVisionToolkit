@@ -1,5 +1,7 @@
 #include <signal.h>
 #include <iostream>
+#include <filesystem>
+namespace fs = std::filesystem;
 
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
@@ -28,7 +30,7 @@ const cv::String argKeys =
 class InceptionSettings final : public cvt::JsonSettings, public cvt::JsonModelSettings
 {
 public:
-    InceptionSettings(const std::string& jPath, const std::string& nodeName)
+    InceptionSettings(const fs::path& jPath, const std::string& nodeName)
         : JsonSettings(jPath, nodeName)
         , JsonModelSettings(jPath, nodeName)
     {
