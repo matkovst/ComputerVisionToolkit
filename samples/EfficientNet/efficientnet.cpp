@@ -22,12 +22,12 @@ const cv::String argKeys =
         "{ @json j        |        | path to json }"
         ;
 
-class EfficientNetSettings final : public cvt::JsonSettings, public cvt::JsonModelSettings
+class EfficientNetSettings final : public cvt::Settings, public cvt::ModelSettings
 {
 public:
     EfficientNetSettings(const fs::path& jPath, const std::string& nodeName)
-        : JsonSettings(jPath, nodeName)
-        , JsonModelSettings(jPath, nodeName)
+        : Settings(jPath, nodeName)
+        , ModelSettings(jPath, nodeName)
     {
         if ( m_jNodeSettings.empty() )
         {
@@ -40,7 +40,7 @@ public:
 
     std::string summary() const noexcept
     {
-        return JsonSettings::summary() + JsonModelSettings::summary();
+        return Settings::summary() + ModelSettings::summary();
     }
 };
 

@@ -32,23 +32,23 @@ BOOST_AUTO_TEST_CASE(test_settings)
 {
     using namespace cvt;
 
-    class MySettings final : public JsonSettings, public JsonModelSettings
+    class MySettings final : public Settings, public ModelSettings
     {
     public:
         MySettings(const json& jSettings, const std::string& nodeName)
-            : JsonSettings(jSettings, nodeName)
-            , JsonModelSettings(jSettings, nodeName)
+            : Settings(jSettings, nodeName)
+            , ModelSettings(jSettings, nodeName)
         {}
         MySettings(const fs::path& jPath, const std::string& nodeName)
-            : JsonSettings(jPath, nodeName)
-            , JsonModelSettings(jPath, nodeName)
+            : Settings(jPath, nodeName)
+            , ModelSettings(jPath, nodeName)
         {}
 
         ~MySettings() = default;
 
         std::string summary() const noexcept
         {
-            return JsonSettings::summary() + JsonModelSettings::summary();
+            return Settings::summary() + ModelSettings::summary();
         }
     };
 

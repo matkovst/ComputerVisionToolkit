@@ -22,11 +22,11 @@ const cv::String argKeys =
         "{ @json j        |        | path to json }"
         ;
 
-class GreyEdgeSettings final : public cvt::JsonSettings
+class GreyEdgeSettings final : public cvt::Settings
 {
 public:
     GreyEdgeSettings(const fs::path& jPath, const std::string& nodeName)
-        : JsonSettings(jPath, nodeName)
+        : Settings(jPath, nodeName)
     {
         if ( m_jNodeSettings.empty() )
         {
@@ -70,7 +70,7 @@ public:
             << "\t\t- MinkowskiNorm = " << MinkowskiNorm() << std::endl
             << "\t\t- derivativeOrder = " << derivativeOrder();
 
-        return JsonSettings::summary() + oss.str();
+        return Settings::summary() + oss.str();
     }
 
 

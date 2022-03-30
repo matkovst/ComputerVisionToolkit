@@ -17,17 +17,17 @@ namespace cvt
 
 /*! @brief The base class for json settings. Contains general settings.
 */
-class JsonSettings
+class Settings
 {
 public:
-    explicit JsonSettings(const fs::path& jPath, const std::string& nodeName);
-    explicit JsonSettings(const json& jSettings, const std::string& nodeName);
+    explicit Settings(const fs::path& jPath, const std::string& nodeName);
+    explicit Settings(const json& jSettings, const std::string& nodeName);
 
-    virtual ~JsonSettings() = default;
+    virtual ~Settings() = default;
 
     bool init(const std::string& nodeName);
 
-    std::string summary() const noexcept;
+    std::string summary(const std::string& title = "Settings summary:") const noexcept;
 
 
     const std::string& input() const noexcept;
@@ -47,7 +47,7 @@ protected:
     json m_jNodeSettings;
 
 private:
-    const std::string m_loggerName { "JsonSettings" };
+    const std::string m_loggerName { "Settings" };
     LoggerPtr m_logger;
     bool m_initialized { false };
     std::string m_input { "0" };
@@ -61,15 +61,15 @@ private:
 
 /*! @brief The optional class for json model settings.
 */
-class JsonModelSettings
+class ModelSettings
 {
 public:
-    explicit JsonModelSettings(const fs::path& jPath, const std::string& nodeName);
-    explicit JsonModelSettings(const json& jSettings, const std::string& nodeName);
+    explicit ModelSettings(const fs::path& jPath, const std::string& nodeName);
+    explicit ModelSettings(const json& jSettings, const std::string& nodeName);
 
-    virtual ~JsonModelSettings() = default;
+    virtual ~ModelSettings() = default;
 
-    std::string summary() const noexcept;
+    std::string summary(const std::string& title = "ModelSettings summary:") const noexcept;
 
     const std::filesystem::path& modelRootDir() const noexcept { return m_modelRootDir; }
 
@@ -99,7 +99,7 @@ protected:
     const json m_jModelSettings;
 
 private:
-    const std::string m_loggerName { "JsonModelSettings" };
+    const std::string m_loggerName { "ModelSettings" };
     const std::string m_nodeName;
     LoggerPtr m_logger;
     std::filesystem::path m_modelRootDir { "" };

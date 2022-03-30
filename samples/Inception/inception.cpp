@@ -27,12 +27,12 @@ const cv::String argKeys =
         ;
 
 
-class InceptionSettings final : public cvt::JsonSettings, public cvt::JsonModelSettings
+class InceptionSettings final : public cvt::Settings, public cvt::ModelSettings
 {
 public:
     InceptionSettings(const fs::path& jPath, const std::string& nodeName)
-        : JsonSettings(jPath, nodeName)
-        , JsonModelSettings(jPath, nodeName)
+        : Settings(jPath, nodeName)
+        , ModelSettings(jPath, nodeName)
     {
         m_logger = cvt::createLogger("InceptionSettings");
 
@@ -47,7 +47,7 @@ public:
 
     std::string summary() const noexcept
     {
-        return JsonSettings::summary() + JsonModelSettings::summary();
+        return Settings::summary("InceptionSettings summary:") + ModelSettings::summary();
     }
 
 private:

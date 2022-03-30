@@ -33,11 +33,11 @@ static std::vector<T> linspace(T a, T b, size_t N)
 }
 
 
-class SimpleShadowTerminatorSettings final : public cvt::JsonSettings
+class SimpleShadowTerminatorSettings final : public cvt::Settings
 {
 public:
     SimpleShadowTerminatorSettings(const fs::path& jPath, const std::string& nodeName)
-        : JsonSettings(jPath, nodeName)
+        : Settings(jPath, nodeName)
     {
         if ( m_jNodeSettings.empty() )
         {
@@ -58,7 +58,7 @@ public:
             << "\tSPECIFIC SETTINGS: " << std::endl
             << "\t\t- nAngles = " << nAngles();
 
-        return JsonSettings::summary() + oss.str();
+        return Settings::summary() + oss.str();
     }
 
 

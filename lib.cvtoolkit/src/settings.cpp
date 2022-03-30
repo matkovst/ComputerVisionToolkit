@@ -11,23 +11,23 @@ auto goodKey = [](const json& j, const std::string& name)
     return (j.contains(name) && !j[name].empty());
 };
 
-JsonSettings::JsonSettings(const fs::path& jPath, const std::string& nodeName)
+Settings::Settings(const fs::path& jPath, const std::string& nodeName)
     : m_jSettings(makeJsonObject(jPath.string()))
-    , m_loggerName("JsonSettings-" + nodeName)
+    , m_loggerName("Settings-" + nodeName)
 {
     m_logger = createLogger(m_loggerName);
     m_initialized = init(nodeName);
 }
 
-JsonSettings::JsonSettings(const json& jSettings, const std::string& nodeName)
+Settings::Settings(const json& jSettings, const std::string& nodeName)
     : m_jSettings(jSettings)
-    , m_loggerName("JsonSettings-" + nodeName)
+    , m_loggerName("Settings-" + nodeName)
 {
     m_logger = createLogger(m_loggerName);
     m_initialized = init(nodeName);
 }
 
-bool JsonSettings::init(const std::string& nodeName)
+bool Settings::init(const std::string& nodeName)
 {
     if ( m_jSettings.empty() )
     {
@@ -65,10 +65,10 @@ bool JsonSettings::init(const std::string& nodeName)
     return true;
 }
 
-std::string JsonSettings::summary() const noexcept
+std::string Settings::summary(const std::string& title) const noexcept
 {
     std::ostringstream oss;
-    oss << "[JsonSettings] Settings summary:" << std::endl
+    oss << title << std::endl
         << std::right
         << "\tGENERAL SETTINGS: " << std::endl
         << "\t\t- input = " << input() << std::endl
@@ -81,48 +81,48 @@ std::string JsonSettings::summary() const noexcept
 
 }
 
-const std::string& JsonSettings::input() const noexcept
+const std::string& Settings::input() const noexcept
 {
     return m_input;
 }
 
-cv::Size JsonSettings::inputSize() const noexcept
+cv::Size Settings::inputSize() const noexcept
 {
     return m_inputSize;
 }
 
-bool JsonSettings::record() const noexcept
+bool Settings::record() const noexcept
 {
     return m_record;
 }
 
-bool JsonSettings::display() const noexcept
+bool Settings::display() const noexcept
 {
     return m_display;
 }
 
-bool JsonSettings::gpu() const noexcept
+bool Settings::gpu() const noexcept
 {
     return m_gpu;
 }
 
-JsonModelSettings::JsonModelSettings(const fs::path& jPath, const std::string& nodeName)
+ModelSettings::ModelSettings(const fs::path& jPath, const std::string& nodeName)
     : m_jModelSettings(makeJsonObject(jPath.string()))
     , m_nodeName(nodeName)
-    , m_loggerName("JsonModelSettings-" + nodeName)
+    , m_loggerName("ModelSettings-" + nodeName)
 {
     init();
 }
 
-JsonModelSettings::JsonModelSettings(const json& jSettings, const std::string& nodeName)
+ModelSettings::ModelSettings(const json& jSettings, const std::string& nodeName)
     : m_jModelSettings(jSettings)
     , m_nodeName(nodeName)
-    , m_loggerName("JsonModelSettings-" + nodeName)
+    , m_loggerName("ModelSettings-" + nodeName)
 {
     init();
 }
 
-void JsonModelSettings::init()
+void ModelSettings::init()
 {
     m_logger = createLogger(m_loggerName);
 
@@ -203,10 +203,11 @@ void JsonModelSettings::init()
     }
 }
 
-std::string JsonModelSettings::summary() const noexcept
+std::string ModelSettings::summary(const std::string& title) const noexcept
 {
     std::ostringstream oss;
-    oss << std::endl << std::right
+    oss << title << std::endl
+        << std::right
         << "\tMODEL SETTINGS: " << std::endl
         << "\t\t- model-engine = " << modelEngine() << std::endl
         << "\t\t- model-path = " << modelPath() << std::endl
@@ -222,7 +223,7 @@ std::string JsonModelSettings::summary() const noexcept
     return oss.str();
 }
 
-int JsonModelSettings::engine() const noexcept
+int ModelSettings::engine() const noexcept
 {
     int engine = cvt::NeuralNetwork::Engine::OpenCV;
     if (modelEngine() == "torch")

@@ -25,11 +25,11 @@ const cv::String argKeys =
         "{ @json j        |        | path to json }"
         ;
 
-class DPTMonodepthSettings final : public cvt::JsonSettings
+class DPTMonodepthSettings final : public cvt::Settings
 {
 public:
     DPTMonodepthSettings(const fs::path& jPath, const std::string& nodeName)
-        : JsonSettings(jPath, nodeName)
+        : Settings(jPath, nodeName)
     {
         if ( m_jNodeSettings.empty() )
         {
@@ -55,7 +55,7 @@ public:
             << "\tSPECIFIC SETTINGS: " << std::endl
             << "\t\t- modelPath = " << modelPath();
 
-        return JsonSettings::summary() + oss.str();
+        return Settings::summary() + oss.str();
     }
 
 

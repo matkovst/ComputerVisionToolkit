@@ -52,7 +52,7 @@ int main(int argc, char** argv)
         logger->error("Could not load settings: {}", settingsMsg);
         return -1;
     }
-    const auto jSettings = std::make_shared<cvt::JsonSettings>(fs::path(settingsPath), SampleName);
+    const auto jSettings = std::make_shared<cvt::Settings>(fs::path(settingsPath), SampleName);
     logger->debug(jSettings->summary());
 
     /* Open stream */
