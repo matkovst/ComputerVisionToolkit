@@ -5,8 +5,11 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 
-#include <cvtoolkit/cvgui.hpp>
-#include <cvtoolkit/detector/yolo_object_detector.hpp>
+#include "cvtoolkit/cvplayer.hpp"
+#include "cvtoolkit/cvgui.hpp"
+#include "cvtoolkit/trigger.hpp"
+#include "cvtoolkit/detector_manager.hpp"
+#include "cvtoolkit/detector/yolo_object_detector.hpp"
 
 
 const static std::string WinName = "YOLO object detection";

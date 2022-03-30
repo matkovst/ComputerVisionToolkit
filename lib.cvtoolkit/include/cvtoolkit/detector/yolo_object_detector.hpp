@@ -5,13 +5,15 @@
 #include <opencv2/dnn.hpp>
 
 #include "../utils.hpp"
-#include "../detector_manager.hpp"
-#include "../nndetector.hpp"
-
-class EventTrigger;
+#include "../detector.hpp"
 
 namespace cvt
 {
+
+class EventTrigger;
+class YOLOObjectDetectorSettings;
+class YOLOObjectNNDetector;
+using ObjectClasses = std::map<int, std::string>;
 
 class YOLOObjectDetectorSettings final : public DetectorSettings
 {

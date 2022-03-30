@@ -4,8 +4,9 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/video/tracking.hpp>
 
-#include <cvtoolkit/cvplayer.hpp>
-#include <cvtoolkit/cvgui.hpp>
+#include "cvtoolkit/cvplayer.hpp"
+#include "cvtoolkit/cvgui.hpp"
+#include "cvtoolkit/metrics.hpp"
 
 
 const static std::string WinName = "Farneback Optical Flow";

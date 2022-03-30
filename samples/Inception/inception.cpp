@@ -5,8 +5,10 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 
+#include "cvtoolkit/cvplayer.hpp"
 #include "cvtoolkit/cvgui.hpp"
 #include "cvtoolkit/logger.hpp"
+#include "cvtoolkit/metrics.hpp"
 #include "cvtoolkit/settings.hpp"
 #include "cvtoolkit/nn/inception.hpp"
 

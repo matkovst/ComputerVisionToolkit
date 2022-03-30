@@ -8,6 +8,7 @@
 #include "cvtoolkit/cvplayer.hpp"
 #include "cvtoolkit/cvgui.hpp"
 #include "cvtoolkit/utils.hpp"
+#include "cvtoolkit/metrics.hpp"
 #include "cvtoolkit/settings.hpp"
 
 

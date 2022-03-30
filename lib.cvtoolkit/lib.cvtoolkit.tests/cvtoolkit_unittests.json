@@ -1,7 +1,7 @@
 {
-    "inception" : 
+    "my-settings" : 
     {
-        "input" : "0",
+        "input" : "dev",
         "input-size" : "100x100",
         "record" : false,
         "display" : true,

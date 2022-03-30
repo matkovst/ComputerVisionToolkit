@@ -6,9 +6,10 @@
 #include <opencv2/cudaimgproc.hpp>
 #include <opencv2/cudaarithm.hpp>
 
-#include <cvtoolkit/cvplayer.hpp>
-#include <cvtoolkit/cvgui.hpp>
-#include <cvtoolkit/utils.hpp>
+#include "cvtoolkit/cvplayer.hpp"
+#include "cvtoolkit/cvgui.hpp"
+#include "cvtoolkit/utils.hpp"
+#include "cvtoolkit/metrics.hpp"
 
 
 const static std::string WinName = "Nvidia HW Optical Flow";

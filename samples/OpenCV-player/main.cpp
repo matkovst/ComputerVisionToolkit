@@ -3,9 +3,10 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 
-#include <cvtoolkit/cvplayer.hpp>
-#include <cvtoolkit/cvgui.hpp>
-#include <cvtoolkit/utils.hpp>
+#include "cvtoolkit/cvplayer.hpp"
+#include "cvtoolkit/cvgui.hpp"
+#include "cvtoolkit/utils.hpp"
+#include "cvtoolkit/metrics.hpp"
 
 
 const static std::string WinName = "OpenCV Player";

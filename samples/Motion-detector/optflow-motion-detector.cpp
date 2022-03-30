@@ -5,8 +5,12 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 
-#include <cvtoolkit/cvgui.hpp>
-#include <cvtoolkit/detector/optflow_motion_detector.hpp>
+#include "cvtoolkit/cvplayer.hpp"
+#include "cvtoolkit/cvgui.hpp"
+#include "cvtoolkit/utils.hpp"
+#include "cvtoolkit/metrics.hpp"
+#include "cvtoolkit/detector_manager.hpp"
+#include "cvtoolkit/detector/optflow_motion_detector.hpp"
 
 
 const static std::string WinName = "Motion detection via optical flow";

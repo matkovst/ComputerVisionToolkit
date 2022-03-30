@@ -7,9 +7,10 @@
 #include <opencv2/cudabgsegm.hpp>
 #endif
 
-#include <cvtoolkit/cvplayer.hpp>
-#include <cvtoolkit/cvgui.hpp>
-#include <cvtoolkit/utils.hpp>
+#include "cvtoolkit/cvplayer.hpp"
+#include "cvtoolkit/cvgui.hpp"
+#include "cvtoolkit/utils.hpp"
+#include "cvtoolkit/metrics.hpp"
 
 
 const static std::string WinName = "MOG2 Background subtractor";

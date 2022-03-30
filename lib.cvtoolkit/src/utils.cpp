@@ -1,4 +1,6 @@
 #include <fstream>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/highgui.hpp>
 #include "cvtoolkit/utils.hpp"
 
 namespace cvt

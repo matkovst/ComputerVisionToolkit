@@ -3,13 +3,11 @@
 #include <iostream>
 #include <opencv2/highgui.hpp>
 
-#include "cvtoolkit/cvplayer.hpp"
-#include "cvtoolkit/utils.hpp"
-
-class MetricMaster;
-
 namespace cvt
 {
+
+class OpenCVPlayer;
+class MetricMaster;
 
 class GUI final
 {
@@ -21,7 +19,8 @@ public:
         CLOSE
     };
 
-    GUI(const std::string& winName, const std::shared_ptr<OpenCVPlayer>& player, const std::shared_ptr<MetricMaster>& metrics = nullptr);
+    GUI(const std::string& winName, const std::shared_ptr<OpenCVPlayer>& player, 
+            const std::shared_ptr<MetricMaster>& metrics = nullptr);
 
     ~GUI();
 

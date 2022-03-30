@@ -1,11 +1,13 @@
 #include <sstream>
+#include "cvtoolkit/cvplayer.hpp"
 #include "cvtoolkit/metrics.hpp"
 #include "cvtoolkit/cvgui.hpp"
 
 namespace cvt
 {
 
-GUI::GUI(const std::string& winName, const std::shared_ptr<OpenCVPlayer>& player, const std::shared_ptr<MetricMaster>& metrics)
+GUI::GUI(const std::string& winName, const std::shared_ptr<OpenCVPlayer>& player, 
+            const std::shared_ptr<MetricMaster>& metrics)
     : m_winName(winName)
     , m_player(player)
     , m_metrics(metrics)

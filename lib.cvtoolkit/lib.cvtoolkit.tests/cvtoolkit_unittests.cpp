@@ -27,7 +27,9 @@ BOOST_AUTO_TEST_CASE(test_spdlog_logger)
 
 BOOST_AUTO_TEST_CASE(test_settings)
 {
-    class MySettings final : public cvt::JsonSettings, public cvt::JsonModelSettings
+    using namespace cvt;
+
+    class MySettings final : public JsonSettings, public JsonModelSettings
     {
     public:
         MySettings(const fs::path& jPath, const std::string& nodeName)
@@ -51,11 +53,11 @@ BOOST_AUTO_TEST_CASE(test_settings)
     /* Try testing true settings */
     fs::path mySettingsPath = fs::path("..") / ".." / ".." / "lib.cvtoolkit" 
                                 / "lib.cvtoolkit.tests" / "cvtoolkit_unittests.json";
-    BOOST_CHECK_MESSAGE(false == fs::exists(mySettingsPath), 
+    BOOST_CHECK_MESSAGE(fs::exists(mySettingsPath), 
                         "To continue test you must create cvtoolkit_unittests.json");
 
-    // mySettings = std::make_shared<MySettings>(mySettingsPath, "my-settings");
-    // BOOST_REQUIRE(nullptr != mySettings && mySettings->initialized());
+    mySettings = std::make_shared<MySettings>(mySettingsPath, "my-settings");
+    BOOST_REQUIRE(nullptr != mySettings && mySettings->initialized());
 }
 
 BOOST_AUTO_TEST_CASE(test_nn_module)

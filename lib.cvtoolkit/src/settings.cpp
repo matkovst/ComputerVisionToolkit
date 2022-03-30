@@ -6,6 +6,11 @@
 namespace cvt
 {
 
+auto goodKey = [](const json& j, const std::string& name)
+{
+    return (j.contains(name) && !j[name].empty());
+};
+
 JsonSettings::JsonSettings(const fs::path& jPath, const std::string& nodeName)
     : m_jSettings(makeJsonObject(jPath.string()))
 {
@@ -29,19 +34,19 @@ bool JsonSettings::init(const std::string& nodeName)
         return false;
     }
         
-    if ( !m_jNodeSettings["input"].empty() )
+    if (goodKey(m_jNodeSettings, "input"))
         m_input = static_cast<std::string>(m_jNodeSettings["input"]);
         
-    if ( !m_jNodeSettings["input-size"].empty() )
+    if (goodKey(m_jNodeSettings, "input-size"))
         m_inputSize = cvt::parseResolution(m_jNodeSettings["input-size"]);
         
-    if ( !m_jNodeSettings["record"].empty() )
+    if (goodKey(m_jNodeSettings, "record"))
         m_record = static_cast<bool>(m_jNodeSettings["record"]);
         
-    if ( !m_jNodeSettings["display"].empty() )
+    if (goodKey(m_jNodeSettings, "display"))
         m_display = static_cast<bool>(m_jNodeSettings["display"]);
         
-    if ( !m_jNodeSettings["gpu"].empty() )
+    if (goodKey(m_jNodeSettings, "gpu"))
         m_gpu = static_cast<bool>(m_jNodeSettings["gpu"]);
 
     /* Handle areas */
@@ -111,27 +116,27 @@ JsonModelSettings::JsonModelSettings(const fs::path& jPath, const std::string& n
         return;
     }
 
-    if ( !jNodeSettings["model-root-dir"].empty() )
+    if (goodKey(jNodeSettings, "model-root-dir"))
         m_modelRootDir = static_cast<std::string>(jNodeSettings["model-root-dir"]);
 
-    if ( !jNodeSettings["model-path"].empty() )
+    if (goodKey(jNodeSettings, "model-path"))
         m_modelPath = static_cast<std::string>(jNodeSettings["model-path"]);
 
-    if ( !jNodeSettings["model-engine"].empty() )
+    if (goodKey(jNodeSettings, "model-engine"))
         m_modelEngine = static_cast<std::string>(jNodeSettings["model-engine"]);
 
-    if ( !jNodeSettings["model-config-path"].empty() )
+    if (goodKey(jNodeSettings, "model-config-path"))
         m_modelConfigPath = static_cast<std::string>(jNodeSettings["model-config-path"]);
 
-    if ( !jNodeSettings["model-classes-path"].empty() )
+    if (goodKey(jNodeSettings, "model-classes-path"))
         m_modelClassesPath = static_cast<std::string>(jNodeSettings["model-classes-path"]);
         
     /* Parse pre-processing params */
     {
-        if ( !jNodeSettings["model-preprocessing-size"].empty() )
+        if (goodKey(jNodeSettings, "model-preprocessing-size"))
             m_preprocessing.size = cvt::parseResolution(jNodeSettings["model-preprocessing-size"]);
 
-        if ( !jNodeSettings["model-preprocessing-color-code"].empty() )
+        if (goodKey(jNodeSettings, "model-preprocessing-color-code"))
         {
             const auto& colorMode = static_cast<std::string>(
                 jNodeSettings["model-preprocessing-color-code"]
@@ -140,12 +145,12 @@ JsonModelSettings::JsonModelSettings(const fs::path& jPath, const std::string& n
                 m_preprocessing.colorConvCode = cv::COLOR_BGR2RGB;
         }
 
-        if ( !jNodeSettings["model-preprocessing-scale"].empty() )
+        if (goodKey(jNodeSettings, "model-preprocessing-scale"))
             m_preprocessing.scale = static_cast<double>(
                 jNodeSettings["model-preprocessing-scale"]
             );
 
-        if ( !jNodeSettings["model-preprocessing-mean"].empty() )
+        if (goodKey(jNodeSettings, "model-preprocessing-mean"))
         {
             std::vector<double> vecMean;
             for (double x : jNodeSettings["model-preprocessing-mean"])
@@ -155,7 +160,7 @@ JsonModelSettings::JsonModelSettings(const fs::path& jPath, const std::string& n
                 m_preprocessing.mean = { vecMean[0], vecMean[1], vecMean[2] };
         }
 
-        if ( !jNodeSettings["model-preprocessing-std"].empty() )
+        if (goodKey(jNodeSettings, "model-preprocessing-std"))
         {
             std::vector<double> vecStd;
             for (double x : jNodeSettings["model-preprocessing-std"])
@@ -168,7 +173,7 @@ JsonModelSettings::JsonModelSettings(const fs::path& jPath, const std::string& n
 
     /* Parse post-processing params */
     {
-        if ( !jNodeSettings["model-postprocessing-softmax"].empty() )
+        if (goodKey(jNodeSettings, "model-postprocessing-softmax"))
             m_postprocessing.doSoftmax = static_cast<bool>(
                 jNodeSettings["model-postprocessing-softmax"]
             );

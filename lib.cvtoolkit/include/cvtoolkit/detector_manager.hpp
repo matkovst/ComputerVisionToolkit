@@ -11,11 +11,11 @@
 #include <opencv2/core.hpp>
 
 #include "detector.hpp"
-#include "metrics.hpp"
-
 
 namespace cvt
 {
+
+class MetricMaster;
 
 template<typename T>
 class ConcurrentQueue final

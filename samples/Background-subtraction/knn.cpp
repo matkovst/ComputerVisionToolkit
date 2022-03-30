@@ -4,9 +4,10 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/video/background_segm.hpp>
 
-#include <cvtoolkit/cvplayer.hpp>
-#include <cvtoolkit/cvgui.hpp>
-#include <cvtoolkit/utils.hpp>
+#include "cvtoolkit/cvplayer.hpp"
+#include "cvtoolkit/cvgui.hpp"
+#include "cvtoolkit/utils.hpp"
+#include "cvtoolkit/metrics.hpp"
 
 
 const static std::string WinName = "KNN Background subtractor";

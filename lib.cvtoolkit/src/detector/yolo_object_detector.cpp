@@ -1,4 +1,6 @@
+#include <opencv2/imgproc.hpp>
 #include "cvtoolkit/trigger.hpp"
+#include "cvtoolkit/nndetector.hpp"
 #include "cvtoolkit/detector/yolo_object_detector.hpp"
 
 

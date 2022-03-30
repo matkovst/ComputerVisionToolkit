@@ -10,11 +10,9 @@
 #include <opencv2/video/tracking.hpp>
 #endif
 
-#include "../utils.hpp"
-#include "../detector_manager.hpp"
+#include "../trigger.hpp"
+#include "../detector.hpp"
 #include "../math/gaussian_estimator.hpp"
-
-class EventTrigger;
 
 namespace cvt
 {

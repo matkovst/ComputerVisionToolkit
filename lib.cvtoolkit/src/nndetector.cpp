@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include <sstream>
+#include <opencv2/imgproc.hpp>
 
 namespace cvt
 {

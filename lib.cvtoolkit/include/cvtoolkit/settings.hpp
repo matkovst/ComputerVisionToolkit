@@ -107,9 +107,9 @@ private:
     {
         cv::Size size;
         int colorConvCode { -1 };
-        double scale;
-        cv::Scalar mean;
-        cv::Scalar std;
+        double scale { 1.0 };
+        cv::Scalar mean { 0.0, 0.0, 0.0 };
+        cv::Scalar std { 1.0, 1.0, 1.0 };
     } m_preprocessing;
 
     struct

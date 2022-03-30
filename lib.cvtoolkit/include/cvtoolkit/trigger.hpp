@@ -2,9 +2,6 @@
 
 #include <iostream>
 #include <iomanip>
-#include <opencv2/core.hpp>
-#include <opencv2/imgproc.hpp>
-#include <opencv2/highgui.hpp>
 
 #include "types.hpp"
 #include "metrics.hpp"

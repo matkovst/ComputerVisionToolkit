@@ -7,10 +7,12 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/video/background_segm.hpp>
 
-#include <cvtoolkit/cvplayer.hpp>
-#include <cvtoolkit/cvgui.hpp>
-#include <cvtoolkit/utils.hpp>
-#include <cvtoolkit/math/poisson_estimator.hpp>
+#include "cvtoolkit/cvplayer.hpp"
+#include "cvtoolkit/cvgui.hpp"
+#include "cvtoolkit/utils.hpp"
+#include "cvtoolkit/metrics.hpp"
+#include "cvtoolkit/trigger.hpp"
+#include "cvtoolkit/math/poisson_estimator.hpp"
 
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;

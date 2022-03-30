@@ -1,16 +1,16 @@
 #pragma once
 
 #include <iostream>
-#include <opencv2/core.hpp>
 #include <nlohmann/json.hpp>
+#include <opencv2/core.hpp>
 #include "types.hpp"
 
 using json = nlohmann::json;
 
-class MetricMaster;
-
 namespace cvt
 {
+
+class MetricMaster;
 
 /*! @brief The base class for all detectors.
 
