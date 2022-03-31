@@ -41,11 +41,11 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T>& v)
 
 #ifdef TORCH_FOUND
 
-EfficientNet_Torch::EfficientNet_Torch(const InitializeData& initializeData)
-    : NeuralNetwork(initializeData)
+EfficientNet_Torch::EfficientNet_Torch(const Settings& settings)
+    : NeuralNetwork(settings)
 {
     /* Check CUDA availability */
-    m_device = (NeuralNetwork::Gpu == initializeData.device) ? torch::DeviceType::CUDA : torch::DeviceType::CPU;
+    m_device = (NeuralNetwork::Gpu == settings.device) ? torch::DeviceType::CUDA : torch::DeviceType::CPU;
     if (torch::kCUDA == m_device)
     {
         if (torch::cuda::is_available())
@@ -65,7 +65,7 @@ EfficientNet_Torch::EfficientNet_Torch(const InitializeData& initializeData)
     }
 
     /* Load model */
-    if ( !initializeData.modelPath.empty() )
+    if ( !settings.modelPath.empty() )
     {
         try 
         {
@@ -73,7 +73,7 @@ EfficientNet_Torch::EfficientNet_Torch(const InitializeData& initializeData)
             loadModelTm.start();
 
             // De-serialize ScriptModule from file
-            m_model = torch::jit::load(initializeData.modelPath, m_device);
+            m_model = torch::jit::load(settings.modelPath, m_device);
             m_model.to(m_device);
             m_model.eval();
             m_initialized = true;
@@ -100,9 +100,9 @@ EfficientNet_Torch::EfficientNet_Torch(const InitializeData& initializeData)
             warmupTm.start();
 
             /* Make input */
-            const cv::Size inputSize = (initializeData.modelInputSize.empty()) 
+            const cv::Size inputSize = (settings.modelInputSize.empty()) 
                                     ? cv::Size(224, 224) 
-                                    : initializeData.modelInputSize;
+                                    : settings.modelInputSize;
             const cv::Mat ones = cv::Mat::zeros(inputSize, CV_8UC3) + cv::Scalar::all(1);
 
             cv::Mat out;
@@ -153,10 +153,10 @@ void EfficientNet_Torch::preprocess(const std::vector<cv::Mat>& images, std::vec
         cv::Mat matImage, matImage32f;
 
         // Resize
-        const bool doResize = (!m_initializeData.modelInputSize.empty() 
-                                && m_initializeData.modelInputSize != image.size());
+        const bool doResize = (!m_settings.modelInputSize.empty() 
+                                && m_settings.modelInputSize != image.size());
         if (doResize)
-            cv::resize(matImage, matImage, m_initializeData.modelInputSize, 0.0, 0.0, cv::INTER_CUBIC);
+            cv::resize(matImage, matImage, m_settings.modelInputSize, 0.0, 0.0, cv::INTER_CUBIC);
         else
             matImage = image.clone();
 
@@ -276,8 +276,8 @@ std::ostream& operator<<(std::ostream& os,
     return os;
 }
 
-EfficientNet_Onnx::EfficientNet_Onnx(const InitializeData& initializeData)
-    : NeuralNetwork(initializeData)
+EfficientNet_Onnx::EfficientNet_Onnx(const Settings& settings)
+    : NeuralNetwork(settings)
 {
     Ort::Env env(OrtLoggingLevel::ORT_LOGGING_LEVEL_WARNING, "EfficientNet_Onnx");
     Ort::SessionOptions sessionOptions;
@@ -293,14 +293,14 @@ EfficientNet_Onnx::EfficientNet_Onnx(const InitializeData& initializeData)
     sessionOptions.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_EXTENDED);
 
     /* Load model */
-    if ( !initializeData.modelPath.empty() )
+    if ( !settings.modelPath.empty() )
     {
         try 
         {
             cv::TickMeter loadModelTm;
             loadModelTm.start();
 
-            m_session = Ort::Session(env, initializeData.modelPath.c_str(), sessionOptions);
+            m_session = Ort::Session(env, settings.modelPath.c_str(), sessionOptions);
 
             loadModelTm.stop();
             std::cout << "[EfficientNet_Onnx] Model loading took " << loadModelTm.getAvgTimeMilli() << "ms" << std::endl;
@@ -503,9 +503,9 @@ void EfficientNet_Onnx::postprocess(const OrtData& outputData, std::vector<cv::M
 #endif
 
 
-std::shared_ptr<NeuralNetwork> createEfficientNet(const NeuralNetwork::InitializeData& initializeData)
+std::shared_ptr<NeuralNetwork> createEfficientNet(const NeuralNetwork::Settings& settings)
 {
-    switch (initializeData.engine)
+    switch (settings.engine)
     {
 
     case NeuralNetwork::Engine::OpenCV: // TODO
@@ -513,14 +513,14 @@ std::shared_ptr<NeuralNetwork> createEfficientNet(const NeuralNetwork::Initializ
 
     case NeuralNetwork::Engine::Torch:
 #ifdef TORCH_FOUND
-        return std::make_shared<EfficientNet_Torch>(initializeData);
+        return std::make_shared<EfficientNet_Torch>(settings);
 #else
         return nullptr;
 #endif
 
     case NeuralNetwork::Engine::Onnx:
 #ifdef ONNXRUNTIME_FOUND
-        return std::make_shared<EfficientNet_Onnx>(initializeData);
+        return std::make_shared<EfficientNet_Onnx>(settings);
 #else
         return nullptr;
 #endif

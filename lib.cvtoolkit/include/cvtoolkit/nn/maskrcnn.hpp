@@ -7,13 +7,13 @@
 namespace cvt
 {
 
-class Inception_OpenCV final : public NeuralNetwork, private IOpenCVLoader
+class MaskRCNN_OpenCV final : public NeuralNetwork, private IOpenCVLoader
 {
 public:
 
-    Inception_OpenCV(const Settings& settings);
+    MaskRCNN_OpenCV(const Settings& settings);
 
-    ~Inception_OpenCV() = default;
+    ~MaskRCNN_OpenCV() = default;
 
     void Infer(const std::vector<cv::Mat>& images, std::vector<cv::Mat>& outputs, 
                 const PreprocessData& preprocessData,
@@ -31,8 +31,8 @@ private:
 };
 
 
-/** @brief Creates Inception for specified settings
+/** @brief Creates Mask R-CNN for specified settings
  */
-std::shared_ptr<NeuralNetwork> createInception(const NeuralNetwork::Settings& settings);
+std::shared_ptr<NeuralNetwork> createMaskRCNN(const NeuralNetwork::Settings& settings);
 
 }

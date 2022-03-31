@@ -1,4 +1,3 @@
-#include <cassert>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/dnn.hpp>
 #include "cvtoolkit/utils.hpp"
@@ -7,10 +6,10 @@
 namespace cvt
 {
 
-Inception_OpenCV::Inception_OpenCV(const InitializeData& initializeData)
-    : NeuralNetwork(initializeData)
+Inception_OpenCV::Inception_OpenCV(const Settings& settings)
+    : NeuralNetwork(settings)
 {
-    m_initialized = load(initializeData.modelRootDir, initializeData.device);
+    m_initialized = load(settings.modelRootDir, settings.device);
 }
 
 void Inception_OpenCV::Infer(const std::vector<cv::Mat>& images, std::vector<cv::Mat>& outputs, 
@@ -45,13 +44,13 @@ void Inception_OpenCV::postprocess(const cv::Mat& outLayer, std::vector<cv::Mat>
 
 
 
-std::shared_ptr<NeuralNetwork> createInception(const NeuralNetwork::InitializeData& initializeData)
+std::shared_ptr<NeuralNetwork> createInception(const NeuralNetwork::Settings& settings)
 {
-    switch (initializeData.engine)
+    switch (settings.engine)
     {
 
     case NeuralNetwork::Engine::OpenCV:
-        return std::make_shared<Inception_OpenCV>(initializeData);
+        return std::make_shared<Inception_OpenCV>(settings);
 
     default:
         return nullptr;

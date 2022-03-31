@@ -79,7 +79,7 @@ int main(int argc, char** argv)
     const double fps = player->fps();
 
     /* Task-specific declarations */
-    cvt::NeuralNetwork::InitializeData modelInitData
+    cvt::NeuralNetwork::Settings modelInitData
     {
         "",
         jSettings->modelPath(),

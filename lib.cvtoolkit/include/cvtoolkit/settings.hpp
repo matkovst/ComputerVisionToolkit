@@ -81,6 +81,10 @@ public:
 
     const std::string& modelClassesPath() const noexcept { return m_modelClassesPath; }
 
+    const std::vector<std::string> inputNames() const noexcept { return m_inputNames; }
+    
+    const std::vector<std::string> outputNames() const noexcept { return m_outputNames; }
+
     cv::Size modelPreprocessingSize() const noexcept { return m_preprocessing.size; }
 
     int modelPreprocessingColorConvMode() const noexcept { return m_preprocessing.colorConvCode; }
@@ -107,6 +111,8 @@ private:
     std::string m_modelConfigPath { "" };
     std::string m_modelClassesPath { "" };
     std::string m_modelEngine { "" };
+    std::vector<std::string> m_inputNames;
+    std::vector<std::string> m_outputNames;
 
     struct
     {

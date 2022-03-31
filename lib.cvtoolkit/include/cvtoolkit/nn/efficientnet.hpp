@@ -25,7 +25,7 @@ class EfficientNet_Torch final : public NeuralNetwork
 {
 public:
 
-    EfficientNet_Torch(const InitializeData& initializeData);
+    EfficientNet_Torch(const Settings& settings);
 
     ~EfficientNet_Torch() = default;
 
@@ -80,7 +80,7 @@ class EfficientNet_Onnx final : public NeuralNetwork
 {
 public:
 
-    EfficientNet_Onnx(const InitializeData& initializeData);
+    EfficientNet_Onnx(const Settings& settings);
 
     ~EfficientNet_Onnx() = default;
 
@@ -138,6 +138,6 @@ private:
 
 /** @brief Creates EfficientNet for specified settings
  */
-std::shared_ptr<NeuralNetwork> createEfficientNet(const NeuralNetwork::InitializeData& initializeData);
+std::shared_ptr<NeuralNetwork> createEfficientNet(const NeuralNetwork::Settings& settings);
 
 }

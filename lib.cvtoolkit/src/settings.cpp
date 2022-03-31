@@ -11,6 +11,23 @@ auto goodKey = [](const json& j, const std::string& name)
     return (j.contains(name) && !j[name].empty());
 };
 
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const std::vector<T>& v)
+{
+    os << "[";
+    for (int i = 0; i < v.size(); ++i)
+    {
+        os << v[i];
+        if (i != v.size() - 1)
+        {
+            os << ", ";
+        }
+    }
+    os << "]";
+    return os;
+}
+
+
 Settings::Settings(const fs::path& jPath, const std::string& nodeName)
     : m_jSettings(makeJsonObject(jPath.string()))
     , m_loggerName("Settings-" + nodeName)
@@ -153,6 +170,14 @@ void ModelSettings::init()
 
     if (goodKey(jNodeSettings, "model-classes-path"))
         m_modelClassesPath = static_cast<std::string>(jNodeSettings["model-classes-path"]);
+
+    if (goodKey(jNodeSettings, "model-input-names"))
+        for (const auto& name : jNodeSettings["model-input-names"])
+            m_inputNames.emplace_back(name);
+
+    if (goodKey(jNodeSettings, "model-output-names"))
+        for (const auto& name : jNodeSettings["model-output-names"])
+            m_outputNames.emplace_back(name);
         
     /* Parse pre-processing params */
     {
@@ -213,6 +238,8 @@ std::string ModelSettings::summary(const std::string& title) const noexcept
         << "\t\t- model-path = " << modelPath() << std::endl
         << "\t\t- model-config-path = " << modelConfigPath() << std::endl
         << "\t\t- model-classes-path = " << modelClassesPath() << std::endl
+        << "\t\t- model-input-names = " << inputNames() << std::endl
+        << "\t\t- model-output-names = " << outputNames() << std::endl
 
         << "\t\t- model-preprocessing-size = " << modelPreprocessingSize() << std::endl
         << "\t\t- model-preprocessing-color-code = " << modelPreprocessingColorConvMode() << std::endl

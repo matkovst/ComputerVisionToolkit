@@ -9,13 +9,13 @@
 
         "model-engine" : "opencv",
         "model-root-dir" : "..\\data\\inception5h",
-
+        "model-input-names" : [],
+        "model-output-names" : [],
         "model-preprocessing-size" : "224x224",
         "model-preprocessing-color-code" : "rgb",
         "model-preprocessing-scale" : 1.0,
         "model-preprocessing-mean" : [0.0, 0.0, 0.0],
         "model-preprocessing-std" : [1.0, 1.0, 1.0],
-
         "model-postprocessing-softmax" : false
     }
 }

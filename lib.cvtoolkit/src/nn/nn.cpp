@@ -4,10 +4,10 @@
 namespace cvt
 {
 
-NeuralNetwork::NeuralNetwork(const InitializeData& initializeData)
-    : m_initializeData(initializeData)
+NeuralNetwork::NeuralNetwork(const Settings& settings)
+    : m_settings(settings)
 {
-    const auto labelsFile = getFileWithExt(m_initializeData.modelRootDir, ".txt");
+    const auto labelsFile = getFileWithExt(m_settings.modelRootDir, ".txt");
     if (labelsFile)
         m_labels = loadLabelsMap(labelsFile.value().string());
 }

@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(test_nn_module)
     try
     {
         /* Try feeding empty data */
-        NeuralNetwork::InitializeData data;
+        NeuralNetwork::Settings data;
         auto model = createInception(data);
         BOOST_REQUIRE(nullptr == model);
 

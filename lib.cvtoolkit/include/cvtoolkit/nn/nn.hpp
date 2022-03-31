@@ -35,20 +35,10 @@ public:
 
     using Labels = std::map<int, std::string>;
 
-    enum Engine
-    {
-        OpenCV,
-        Torch,
-        Onnx
-    };
+    enum Engine { OpenCV, Torch, Onnx };
+    enum Device { Cpu, Gpu };
 
-    enum Device
-    {
-        Cpu,
-        Gpu
-    };
-
-    struct InitializeData
+    struct Settings
     {
         fs::path modelRootDir { "" };
         std::string modelPath { "" };
@@ -58,9 +48,9 @@ public:
         int engine { -1 };
         int device { -1 };
 
-        InitializeData() = default;
+        Settings() = default;
 
-        InitializeData(const fs::path& modelRootDir,
+        Settings(const fs::path& modelRootDir,
                         const std::string& modelPath, 
                         const std::string& modelConfigPath, 
                         const std::string& modelClassesPath = "", 
@@ -122,7 +112,7 @@ public:
 
 public:
 
-    explicit NeuralNetwork(const InitializeData& initializeData);
+    explicit NeuralNetwork(const Settings& settings);
 
     virtual ~NeuralNetwork() = default;
 
@@ -157,7 +147,7 @@ public:
     virtual const std::string& label(size_t id) const noexcept;
 
 protected:
-    const InitializeData m_initializeData;
+    const Settings m_settings;
     bool m_initialized { false }; // = false if model failed to load
 
 private:
